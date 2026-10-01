@@ -28,20 +28,19 @@ function toTable(row) {
 }
 
 // GET /api/tables
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const [rows] = await pool.execute(
       'SELECT table_id, table_number, capacity, status, created_at FROM restaurant_tables ORDER BY table_number'
     );
     return res.json({ data: rows.map(toTable) });
   } catch (err) {
-    console.error('GET /api/tables failed:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch tables.' });
+    next(err);
   }
 });
 
 // PUT /api/tables/:id/status
-router.put('/:id/status', async (req, res) => {
+router.put('/:id/status', async (req, res, next) => {
   const tableId = parseId(req.params.id);
   if (tableId === null) return badRequest(res, 'Table id must be a positive integer.');
 
@@ -64,8 +63,7 @@ router.put('/:id/status', async (req, res) => {
 
     return res.json({ message: 'Table status updated.', data: toTable(rows[0]) });
   } catch (err) {
-    console.error(`PUT /api/tables/${tableId}/status failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to update table status.' });
+    next(err);
   }
 });
 

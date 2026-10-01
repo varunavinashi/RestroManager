@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "db:init": "node src/scripts/initDb.js"
+    "db:init": "node src/scripts/initDb.js",
+    "check-schema": "node src/scripts/checkSchema.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

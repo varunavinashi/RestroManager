@@ -23,18 +23,17 @@ function toCategory(row) {
 }
 
 // GET /api/categories
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const [rows] = await pool.execute('SELECT category_id, name, created_at FROM categories ORDER BY name');
     return res.json({ data: rows.map(toCategory) });
   } catch (err) {
-    console.error('GET /api/categories failed:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch categories.' });
+    next(err);
   }
 });
 
 // POST /api/categories
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   const name = parseName((req.body || {}).name);
   if (name === null) return badRequest(res, 'Field "name" is required and must be a non-empty string of at most 100 characters.');
 
@@ -48,8 +47,7 @@ router.post('/', async (req, res) => {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: `Category "${name}" already exists.` });
     }
-    console.error('POST /api/categories failed:', err.message);
-    return res.status(500).json({ error: 'Failed to create category.' });
+    next(err);
   }
 });
 

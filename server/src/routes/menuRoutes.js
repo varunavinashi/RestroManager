@@ -65,7 +65,7 @@ async function categoryExists(categoryId) {
 }
 
 // GET /api/menu
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const clauses = [];
     const params = [];
@@ -89,13 +89,12 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.execute(sql, params);
     return res.json({ data: rows.map(toItem) });
   } catch (err) {
-    console.error('GET /api/menu failed:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch menu items.' });
+    next(err);
   }
 });
 
 // GET /api/menu/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   const itemId = parseId(req.params.id);
   if (itemId === null) return badRequest(res, 'Menu item id must be a positive integer.');
 
@@ -106,13 +105,12 @@ router.get('/:id', async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ error: `Menu item ${itemId} not found.` });
     return res.json({ data: toItem(rows[0]) });
   } catch (err) {
-    console.error(`GET /api/menu/${itemId} failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to fetch menu item.' });
+    next(err);
   }
 });
 
 // POST /api/menu
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   const body = req.body || {};
 
   const name = parseName(body.name);
@@ -141,13 +139,12 @@ router.post('/', async (req, res) => {
 
     return res.status(201).json({ message: 'Menu item created.', data: toItem(rows[0]) });
   } catch (err) {
-    console.error('POST /api/menu failed:', err.message);
-    return res.status(500).json({ error: 'Failed to create menu item.' });
+    next(err);
   }
 });
 
 // PUT /api/menu/:id
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   const itemId = parseId(req.params.id);
   if (itemId === null) return badRequest(res, 'Menu item id must be a positive integer.');
 
@@ -205,13 +202,12 @@ router.put('/:id', async (req, res) => {
 
     return res.json({ message: 'Menu item updated.', data: toItem(rows[0]) });
   } catch (err) {
-    console.error(`PUT /api/menu/${itemId} failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to update menu item.' });
+    next(err);
   }
 });
 
 // DELETE /api/menu/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   const itemId = parseId(req.params.id);
   if (itemId === null) return badRequest(res, 'Menu item id must be a positive integer.');
 
@@ -225,8 +221,7 @@ router.delete('/:id', async (req, res) => {
     if (err.code === 'ER_ROW_IS_REFERENCED_2') {
       return res.status(409).json({ error: `Menu item ${itemId} is referenced by an existing order and cannot be deleted.` });
     }
-    console.error(`DELETE /api/menu/${itemId} failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to delete menu item.' });
+    next(err);
   }
 });
 
