@@ -166,7 +166,7 @@ async function cleanup() {
   if (createdOrderId !== null) {
     await pool.execute('DELETE FROM orders WHERE order_id = ?', [createdOrderId]);
   }
-  await pool.execute("DELETE FROM customers WHERE name = 'Section 11 Tester'");
+  await pool.execute("DELETE FROM customers WHERE name = 'tester'");
   await pool.execute("UPDATE restaurant_tables SET status = 'free' WHERE table_id IN (?, ?)", [TABLE_ID, BROKEN_TABLE_ID]);
 }
 

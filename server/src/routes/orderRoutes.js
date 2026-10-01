@@ -191,7 +191,7 @@ async function insertOrder(connection, { tableId, customerName, staffId, lines }
 }
 
 // GET /api/orders
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const sql = `SELECT ${ORDER_COLUMNS}, COUNT(oi.order_item_id) AS item_count ${ORDER_FROM} LEFT JOIN order_items oi ON oi.order_id = o.order_id GROUP BY o.order_id, o.table_id, t.table_number, o.customer_id, c.name, o.staff_id, s.name, o.order_time, o.status, o.total_amount ORDER BY o.order_time DESC, o.order_id DESC`;
 
@@ -199,13 +199,12 @@ router.get('/', async (req, res) => {
     const data = rows.map((row) => ({ ...toOrder(row), item_count: Number(row.item_count) }));
     return res.json({ data });
   } catch (err) {
-    console.error('GET /api/orders failed:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch orders.' });
+    next(err);
   }
 });
 
 // GET /api/orders/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   const orderId = parseId(req.params.id);
   if (orderId === null) return badRequest(res, 'Order id must be a positive integer.');
 
@@ -215,15 +214,14 @@ router.get('/:id', async (req, res) => {
 
     return res.json({ data: toOrder(orderRow, await selectOrderItems(pool, orderId)) });
   } catch (err) {
-    console.error(`GET /api/orders/${orderId} failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to fetch order.' });
+    next(err);
   }
 });
 
 // POST /api/orders
-// Receive the order request -> validate the input -> get a DB connection 
+// Receive the order request -> validate the input -> get a DB connection
 // -> start transaction -> create order -> commit -> send response.
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   const body = req.body || {};
 
   const tableId = parseId(body.table_id);
@@ -265,8 +263,7 @@ router.post('/', async (req, res) => {
     }
   } catch (err) {
     if (err instanceof RequestError) return badRequest(res, err.message);
-    console.error('POST /api/orders failed:', err.message);
-    return res.status(500).json({ error: 'Failed to place order.', reason: err.message });
+    next(err);
   }
 
   return res.status(201).json({ message: 'Order placed.', data: created });
@@ -274,7 +271,7 @@ router.post('/', async (req, res) => {
 
 // PUT /api/orders/:id/status
 // Take an order ID and a new status -> validate both -> update the order -> fetch the updated order -> return it
-router.put('/:id/status', async (req, res) => {
+router.put('/:id/status', async (req, res, next) => {
   const orderId = parseId(req.params.id);
   if (orderId === null) return badRequest(res, 'Order id must be a positive integer.');
 
@@ -293,8 +290,7 @@ router.put('/:id/status', async (req, res) => {
 
     return res.json({ message: 'Order status updated.', data: toOrder(orderRow, await selectOrderItems(pool, orderId)) });
   } catch (err) {
-    console.error(`PUT /api/orders/${orderId}/status failed:`, err.message);
-    return res.status(500).json({ error: 'Failed to update order status.' });
+    next(err);
   }
 });
 
