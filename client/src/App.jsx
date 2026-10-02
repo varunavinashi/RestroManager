@@ -4,6 +4,7 @@ import MenuPage from './pages/MenuPage'
 import TablesPage from './pages/TablesPage'
 import OrdersPage from './pages/OrdersPage'
 import NewOrderPage from './pages/NewOrderPage'
+import ReportPage from './pages/ReportPage'
 // import { getMenu } from "./api/menuApi";
 // import {useEffect} from 'react'
 
@@ -13,6 +14,7 @@ const NAV_LINKS = [
   { to: '/tables', label: 'Tables' },
   { to: '/orders', label: 'Orders', end: true },
   { to: '/orders/new', label: 'New Order' },
+  { to: '/reports', label: 'Reports' },
 ]
 
 function NavBar() {
@@ -62,6 +64,7 @@ function App() {
           <Route path="/tables" element={<TablesPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
+          <Route path="/reports" element={<ReportPage />} />
         </Routes>
       </main>
     </div>
