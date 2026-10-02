@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { to: '/', label: 'Home', end: true },
   { to: '/menu', label: 'Menu' },
   { to: '/tables', label: 'Tables' },
-  { to: '/orders', label: 'Orders' },
+  { to: '/orders', label: 'Orders', end: true },
   { to: '/orders/new', label: 'New Order' },
 ]
 
