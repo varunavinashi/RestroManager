@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { createMenuItem, getMenu } from '../api/menuApi'
+import { createMenuItem, deleteMenuItem, getMenu, updateMenuItem } from '../api/menuApi'
 import { getCategories } from '../api/categoriesApi'
 
-const EMPTY_FORM = { name: '', category_id: '', price: '' }
+const EMPTY_FORM = { name: '', category_id: '', price: '', is_available: true }
 
 // Groups by category of items
 function groupByCategory(items) {
@@ -33,6 +33,9 @@ export default function MenuPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState(null)
+
+  const [editingId, setEditingId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     fetchItems()
@@ -65,7 +68,27 @@ export default function MenuPage() {
   }
 
   const handleFieldChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }))
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleCancel = () => {
+    setForm(EMPTY_FORM)
+    setEditingId(null)
+    setFormError(null)
+    setShowForm(false)
+  }
+
+  const handleEdit = (item) => {
+    setForm({
+      name: item.name,
+      category_id: String(item.category_id),
+      price: String(Number(item.price)),
+      is_available: item.is_available,
+    })
+    setEditingId(item.item_id)
+    setFormError(null)
+    setShowForm(true)
   }
 
   const handleSubmit = async (event) => {
@@ -76,21 +99,48 @@ export default function MenuPage() {
       return
     }
 
+    const isEditing = editingId !== null
+
     try {
       setSaving(true)
       setFormError(null)
-      await createMenuItem({
+      const payload = {
         name: form.name.trim(),
         category_id: Number(form.category_id),
         price: Number(form.price),
-      })
-      setForm(EMPTY_FORM)
-      setShowForm(false)
+        is_available: form.is_available,
+      }
+
+      if (isEditing) {
+        await updateMenuItem(editingId, payload)
+      } else {
+        await createMenuItem(payload)
+      }
+
+      handleCancel()
       await fetchItems()
     } catch (err) {
-      setFormError(err.response?.data?.error || 'Failed to add menu item')
+      setFormError(err.response?.data?.error || (isEditing ? 'Failed to update menu item' : 'Failed to add menu item'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  // 409 arrives when the item is still referenced by an order, so the server's
+  // message is shown rather than a generic failure
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Delete "${item.name}" from the menu?`)) return
+
+    try {
+      setDeletingId(item.item_id)
+      setError(null)
+      await deleteMenuItem(item.item_id)
+      if (editingId === item.item_id) handleCancel()
+      await fetchItems()
+    } catch (err) {
+      setError(err.response?.data?.error || `Failed to delete ${item.name}`)
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -107,7 +157,7 @@ export default function MenuPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShowForm((prev) => !prev)}
+          onClick={showForm ? handleCancel : () => setShowForm(true)}
           className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600"
         >
           {showForm ? 'Cancel' : 'Add item'}
@@ -126,7 +176,10 @@ export default function MenuPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex flex-wrap gap-3">
+          <h2 className="text-sm font-semibold text-slate-800">
+            {editingId === null ? 'Add item' : `Edit item #${editingId}`}
+          </h2>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <input
               type="text"
               value={form.name}
@@ -155,12 +208,21 @@ export default function MenuPage() {
               placeholder="Price"
               className="w-32 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
             />
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.is_available}
+                onChange={handleFieldChange('is_available')}
+                className="h-4 w-4 rounded border-slate-300 accent-amber-500 focus:ring-amber-500"
+              />
+              Available
+            </label>
             <button
               type="submit"
               disabled={saving}
               className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600 disabled:opacity-60"
             >
-              {saving ? 'Saving…' : 'Save item'}
+              {saving ? 'Saving…' : editingId === null ? 'Save item' : 'Save changes'}
             </button>
           </div>
 
@@ -188,6 +250,24 @@ export default function MenuPage() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-slate-600">₹{Number(item.price).toFixed(2)}</p>
+                  <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(item)}
+                      disabled={deletingId === item.item_id}
+                      className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item)}
+                      disabled={deletingId === item.item_id}
+                      className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 transition hover:text-red-800 disabled:opacity-60"
+                    >
+                      {deletingId === item.item_id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
