@@ -225,7 +225,7 @@ use. Every route is open, and the app runs against a single shared dataset.
 | Table | Seeded contents |
 |---|---|
 | `categories` | 4 — Appetizers, Main Courses, Desserts, Beverages |
-| `menu_items` | 15 across those categories, priced ₹3.50–₹28.50, all available |
+| `menu_items` | 15 across those categories, priced ₹60–₹420, all available |
 | `restaurant_tables` | 8 (table numbers 1–8, capacities 2–10), all `free` |
 | `staff` | 3 — a manager, a waiter, and a chef |
 | `customers` | 2 — `John Doe`, `Alice Smith` |

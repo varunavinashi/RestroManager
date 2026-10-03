@@ -8,27 +8,27 @@ INSERT INTO categories (category_id, name) VALUES
 
 INSERT INTO menu_items (name, category_id, price, is_available) VALUES
   -- starters
-  ('Crispy Calamari', 1, 11.50, TRUE),
-  ('Truffle Garlic Bruschetta', 1, 8.50, TRUE),
-  ('Buffalo Chicken Wings', 1, 12.00, TRUE),
-  ('Loaded Beef Nachos', 1, 10.50, TRUE),
+  ('Samosa with Tamarind Chutney', 1, 90.00, TRUE),
+  ('Paneer Tikka Shashlik', 1, 260.00, TRUE),
+  ('Chicken Tikka', 1, 320.00, TRUE),
+  ('Onion Pakora', 1, 140.00, TRUE),
 
   -- main course
-  ('Grilled Ribeye Steak', 2, 28.50, TRUE),
-  ('Creamy Chicken Fettuccine', 2, 17.50, TRUE),
-  ('Pan-Seared Atlantic Salmon', 2, 24.00, TRUE),
-  ('Classic Cheddar Bacon Burger', 2, 14.50, TRUE),
-  ('Wood-Fired Margherita Pizza', 2, 15.00, TRUE),
+  ('Butter Chicken', 2, 380.00, TRUE),
+  ('Paneer Butter Masala', 2, 320.00, TRUE),
+  ('Dal Makhani', 2, 280.00, TRUE),
+  ('Chana Masala', 2, 240.00, TRUE),
+  ('Hyderabadi Chicken Biryani', 2, 420.00, TRUE),
 
   -- desserts
-  ('Classic Italian Tiramisu', 3, 8.50, TRUE),
-  ('Molten Chocolate Lava Cake', 3, 9.00, TRUE),
-  ('New York Style Cheesecake', 3, 8.00, TRUE),
+  ('Gulab Jamun (2 pcs)', 3, 120.00, TRUE),
+  ('Rasmalai', 3, 140.00, TRUE),
+  ('Gajar Ka Halwa', 3, 160.00, TRUE),
 
   -- beverages
-  ('Fresh Mint Lemonade', 4, 4.50, TRUE),
-  ('Iced Caramel Macchiato', 4, 5.50, TRUE),
-  ('Sparkling Italian Mineral Water', 4, 3.50, TRUE);
+  ('Masala Chai', 4, 60.00, TRUE),
+  ('Fresh Lime Soda', 4, 90.00, TRUE),
+  ('Mango Lassi', 4, 110.00, TRUE);
 
 INSERT INTO restaurant_tables (table_number, capacity, status) VALUES
   (1, 2, 'free'),
