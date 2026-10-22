@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "db:init": "node src/scripts/initDb.js",
-    "db:seed-orders": "node -e \"console.log('not built yet')\"",
+    "db:seed-orders": "node src/scripts/seedOrders.js",
     "db:reset": "npm run db:init && npm run db:seed-orders",
     "check-schema": "node src/scripts/checkSchema.js",
     "test:orders": "node tests/orderApi.test.js"
