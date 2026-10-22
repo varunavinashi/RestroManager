@@ -25,6 +25,7 @@ CREATE TABLE menu_items (
   price DECIMAL(8, 2) NOT NULL,
   is_available BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_menu_price CHECK (price >= 0),
   FOREIGN KEY (category_id) REFERENCES categories(category_id)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -35,7 +36,8 @@ CREATE TABLE restaurant_tables (
   table_number INT NOT NULL UNIQUE,
   capacity INT NOT NULL,
   status ENUM('free', 'occupied') NOT NULL DEFAULT 'free',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_table_capacity CHECK (capacity > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. customers 
@@ -43,7 +45,8 @@ CREATE TABLE customers (
   customer_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   phone VARCHAR(20) DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. staff 
@@ -51,6 +54,9 @@ CREATE TABLE staff (
   staff_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   role ENUM('waiter', 'manager', 'chef') NOT NULL,
+  username VARCHAR(50) NULL UNIQUE,
+  password_hash VARCHAR(255) NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -63,6 +69,7 @@ CREATE TABLE orders (
   order_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status ENUM('pending', 'preparing', 'served', 'paid') NOT NULL DEFAULT 'pending',
   total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+  CONSTRAINT chk_order_total CHECK (total_amount >= 0),
   FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
@@ -78,6 +85,8 @@ CREATE TABLE order_items (
   item_id INT NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
   price_at_order DECIMAL(8, 2) NOT NULL,
+  CONSTRAINT chk_item_quantity CHECK (quantity > 0),
+  CONSTRAINT chk_item_price CHECK (price_at_order >= 0),
   FOREIGN KEY (order_id) REFERENCES orders(order_id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (item_id) REFERENCES menu_items(item_id)

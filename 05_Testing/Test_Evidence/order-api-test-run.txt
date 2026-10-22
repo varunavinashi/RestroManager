@@ -3,18 +3,18 @@ HackA47 RestroManager - Order API Test Suite
 ==============================================================================
 Base URL:      http://localhost:5000
 Runner:        node:test-free (node:assert + global fetch), no test framework installed
-Evidence file: M:\Academics\Local_Web-dev\RestroManager\05_Testing\Test_Evidence\order-api-test-run.txt
+Evidence file: C:\Faltu\RestroManager\05_Testing\Test_Evidence\order-api-test-run.txt
 Pre-flight:    GET /api/health -> 200 {"status":"ok"}
-Fixtures:      table_id=2 (table_number 2, status "free")
-               item_id=1 "Crispy Calamari" Rs.11.50 x2
-               item_id=2 "Truffle Garlic Bruschetta" Rs.8.50 x1
+Fixtures:      table_id=1 (table_number 1, status "free")
+               item_id=1 "Samosa with Tamarind Chutney" Rs.90.00 x2
+               item_id=2 "Paneer Tikka Shashlik" Rs.260.00 x1
 
 ------------------------------------------------------------------------------
 ID:      TC1
 Title:   Valid order (2 items, valid table)
-Input:   POST /api/orders  table_id=2, items=[{item_id:1,quantity:2},{item_id:2,quantity:1}]
+Input:   POST /api/orders  table_id=1, items=[{item_id:1,quantity:2},{item_id:2,quantity:1}]
 Expected: HTTP 201, order created with total_amount = 2 x item1.price + 1 x item2.price
-Actual:  201 created, order_id=10, status=pending, Crispy Calamari x2 + Truffle Garlic Bruschetta x1, total_amount=Rs.31.50
+Actual:  201 created, order_id=3, status=pending, Samosa with Tamarind Chutney x2 + Paneer Tikka Shashlik x1, total_amount=Rs.440.00
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -23,23 +23,23 @@ ID:      TC2
 Title:   Invalid table_id (does not exist)
 Input:   POST /api/orders  table_id=999999, items=[{item_id:1,quantity:1}]
 Expected: HTTP 400 or 404, and no new row in orders or order_items
-Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 4, order_items stayed at 10
+Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 1, order_items stayed at 2
 Result:  PASS
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
 ID:      TC3
 Title:   Empty items array
-Input:   POST /api/orders  table_id=2, items=[]
+Input:   POST /api/orders  table_id=1, items=[]
 Expected: HTTP 400, and no new row in orders or order_items
-Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 4, order_items stayed at 10, table 2 unchanged ("occupied")
+Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 1, order_items stayed at 2, table 1 unchanged ("occupied")
 Result:  PASS
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
 ID:      TC4
 Title:   Invalid status value on PUT /status
-Input:   PUT /api/orders/10/status  status="refunded"
+Input:   PUT /api/orders/3/status  status="refunded"
 Expected: HTTP 400, and the stored order status is unchanged
 Actual:  400 "Field "status" is required and must be one of: pending, preparing, served, paid.", stored status still "pending"
 Result:  PASS
@@ -54,7 +54,7 @@ Actual:  404 "Order 999999 not found."
 Result:  PASS
 ------------------------------------------------------------------------------
 
-Cleanup:       removed test order 10, test customer "test-harness", reset table 2 to "free"
+Cleanup:       removed test order 3, test customer "test-harness", reset table 1 to "free"
 
 ==============================================================================
 SUMMARY: 5/5 passed
