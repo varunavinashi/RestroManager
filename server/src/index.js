@@ -7,6 +7,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const queryLabRoutes = require('./routes/queryLabRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/query-lab', queryLabRoutes);
 
 app.use(errorHandler);
 
