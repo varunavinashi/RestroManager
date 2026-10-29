@@ -1,0 +1,25 @@
+Index EXPLAIN demo
+Synthetic order data; date range: 2026-10-20 00:00:00 to 2026-10-27 23:59:59
+Executions timed per measurement: 200
+
+Dropping the three demo indexes to establish a no-index baseline.
+
+=== Status filter with a date range ===
+Query: SELECT * FROM orders WHERE status = ? AND order_time BETWEEN ? AND ?
+Params: ["paid","2026-10-20 00:00:00","2026-10-27 23:59:59"]
+Before (idx_orders_status_time dropped): type: ALL | key: NULL | rows: 1832 | avg: 2.7721 ms
+After  (idx_orders_status_time created): type: range | key: idx_orders_status_time | rows: 211 | avg: 1.0436 ms
+
+=== Orders in a date range ===
+Query: SELECT * FROM orders WHERE order_time BETWEEN ? AND ?
+Params: ["2026-10-20 00:00:00","2026-10-27 23:59:59"]
+Before (idx_orders_order_time dropped): type: ALL | key: NULL | rows: 1832 | avg: 3.2263 ms
+After  (idx_orders_order_time created): type: range | key: idx_orders_order_time | rows: 211 | avg: 0.8457 ms
+
+=== Menu search with name LIKE ===
+Query: SELECT * FROM menu_items WHERE name LIKE 'Gar%'
+Params: []
+Before (idx_menu_items_name dropped): type: ALL | key: NULL | rows: 15 | avg: 0.1227 ms
+After  (idx_menu_items_name created): type: range | key: idx_menu_items_name | rows: 1 | avg: 0.1398 ms
+
+All indexes are present at the end of the demo.

@@ -1,0 +1,27 @@
+{
+  "name": "restromanager",
+  "version": "1.0.0",
+  "description": "Restaurant & Food Service Management System — a full-stack web app for running a\r restaurant's floor: browse and manage the menu, track table availability, take\r orders, follow them through preparation, and check daily sales. The front end is\r React with Tailwind CSS, the back end is a plain Express REST API, and all data\r lives in MySQL accessed through raw parameterised SQL (no ORM). Everything runs\r locally on a single machine — no Docker, no cloud services, no external APIs.",
+  "homepage": "https://github.com/varunavinashi/RestroManager#readme",
+  "bugs": {
+    "url": "https://github.com/varunavinashi/RestroManager/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varunavinashi/RestroManager.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "hacka47": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

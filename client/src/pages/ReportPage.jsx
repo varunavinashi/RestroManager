@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getReportSummary } from '../api/reportsApi'
+import { getReportSummary, getDailySales } from '../api/reportsApi'
 
 export default function ReportPage() {
   const [summary, setSummary] = useState({
@@ -7,6 +7,7 @@ export default function ReportPage() {
     total_revenue_today: 0,
     top_items: [],
   })
+  const [dailySales, setDailySales] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -19,11 +20,13 @@ export default function ReportPage() {
       setLoading(true)
       setError(null)
       const data = await getReportSummary()
+      const daily = await getDailySales()
       setSummary({
         total_orders_today: data.total_orders_today,
         total_revenue_today: data.total_revenue_today,
         top_items: data.top_items,
       })
+      setDailySales(daily)
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load report')
     } finally {
@@ -88,6 +91,36 @@ export default function ReportPage() {
             </li>
           ))}
         </ol>
+      )}
+
+      <h2 className="mt-8 text-lg font-semibold text-slate-800">Daily sales (last 14 days)</h2>
+      <p className="mt-1 text-sm text-slate-600">Based on synthetic order data.</p>
+
+      {dailySales.length === 0 ? (
+        <p className="mt-4 text-slate-600">No daily sales yet</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+              <tr>
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Orders</th>
+                <th className="px-4 py-3 font-medium">Revenue</th>
+                <th className="px-4 py-3 font-medium">Avg order</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dailySales.map((day) => (
+                <tr key={day.sale_date} className="border-b border-slate-100 last:border-b-0">
+                  <td className="px-4 py-3 text-slate-800">{day.sale_date}</td>
+                  <td className="px-4 py-3 text-slate-700">{day.order_count}</td>
+                  <td className="px-4 py-3 text-slate-800">₹{Number(day.revenue).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-slate-700">₹{Number(day.avg_order_value).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
