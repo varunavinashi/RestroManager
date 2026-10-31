@@ -263,6 +263,7 @@ router.post('/', async (req, res, next) => {
     }
   } catch (err) {
     if (err instanceof RequestError) return badRequest(res, err.message);
+    if (err.sqlState === '45000') return badRequest(res, err.sqlMessage || err.message);
     next(err);
   }
 
@@ -290,6 +291,28 @@ router.put('/:id/status', async (req, res, next) => {
 
     return res.json({ message: 'Order status updated.', data: toOrder(orderRow, await selectOrderItems(pool, orderId)) });
   } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/orders/:id/pay
+// Close a served order through the stored procedure , SQLSTATE 45000 is a conflict
+
+router.put('/:id/pay', async (req, res, next) => {
+  const orderId = parseId(req.params.id);
+  if (orderId === null) return badRequest(res, 'Order id must be a positive integer.');
+
+  try {
+    await pool.execute('CALL sp_close_order(?)', [orderId]);
+
+    const orderRow = await selectOrder(pool, orderId);
+    if (orderRow === null) return res.status(404).json({ error: `Order ${orderId} not found.` });
+
+    return res.json({ message: 'Order paid.', data: toOrder(orderRow, await selectOrderItems(pool, orderId)) });
+  } catch (err) {
+    if (err.sqlState === '45000') {
+      return res.status(409).json({ error: err.sqlMessage || err.message });
+    }
     next(err);
   }
 });

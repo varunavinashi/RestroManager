@@ -1,0 +1,65 @@
+==============================================================================
+HackA47 RestroManager - Trigger and Routine Test Suite
+==============================================================================
+Evidence file: C:\Faltu\RestroManager\05_Testing\Test_Evidence\trigger-test-run.txt
+
+
+ID:       TC1
+Title:    Insert order with two items; trigger sets total_amount
+Expected: orders.total_amount equals the two line totals
+Actual:   order 1858 total_amount=440.00 from trigger only
+Result:   PASS
+
+ID:       TC2
+Title:    Update item quantity then delete an item
+Expected: total_amount changes correctly both times
+Actual:   total 440.00 -> 530.00 after update -> 270.00 after delete
+Result:   PASS
+
+ID:       TC3
+Title:    Insert order_item for an unavailable item
+Expected: rejected with SQLSTATE 45000 and a clear message
+Actual:   rejected with SQLSTATE 45000: "Cannot order an unavailable menu item."
+Result:   PASS
+
+ID:       TC4
+Title:    Change order status pending -> preparing
+Expected: exactly one order_status_log row appears
+Actual:   1 log row (pending -> preparing)
+Result:   PASS
+
+ID:       TC5
+Title:    Pay orders on a table with one and with two open orders
+Expected: table free with one open order; occupied while another is unpaid
+Actual:   table 1: free with one order, occupied with another unpaid order
+Result:   PASS
+
+ID:       TC6
+Title:    sp_close_order rejects pending, closes served, rejects missing
+Expected: pending -> error; served -> paid; missing -> error
+Actual:   pending: 45000 "Order must be served before payment"; served: paid; missing: 45000 "Order not found"
+Result:   PASS
+
+ID:       TC7
+Title:    Compare fn_order_total with orders.total_amount
+Expected: all 5 random orders match
+Actual:   5/5 orders matched (409, 1792, 1738, 258, 1158)
+Result:   PASS
+
+ID:       TC8
+Title:    Compare sp_daily_sales with v_daily_sales for yesterday
+Expected: order count, revenue and average match
+Actual:   2026-10-30: count=39, revenue=54500.00, avg=1397.44
+Result:   PASS
+
+==============================================================================
+SUMMARY: 8/8 passed
+  PASS  TC1
+  PASS  TC2
+  PASS  TC3
+  PASS  TC4
+  PASS  TC5
+  PASS  TC6
+  PASS  TC7
+  PASS  TC8
+==============================================================================

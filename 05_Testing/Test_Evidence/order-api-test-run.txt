@@ -14,7 +14,7 @@ ID:      TC1
 Title:   Valid order (2 items, valid table)
 Input:   POST /api/orders  table_id=1, items=[{item_id:1,quantity:2},{item_id:2,quantity:1}]
 Expected: HTTP 201, order created with total_amount = 2 x item1.price + 1 x item2.price
-Actual:  201 created, order_id=1833, status=pending, Samosa with Tamarind Chutney x2 + Paneer Tikka Shashlik x1, total_amount=Rs.440.00
+Actual:  201 created, order_id=1867, status=pending, Samosa with Tamarind Chutney x2 + Paneer Tikka Shashlik x1, total_amount=Rs.440.00
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ ID:      TC2
 Title:   Invalid table_id (does not exist)
 Input:   POST /api/orders  table_id=999999, items=[{item_id:1,quantity:1}]
 Expected: HTTP 400 or 404, and no new row in orders or order_items
-Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 1833, order_items stayed at 6287
+Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 1847, order_items stayed at 6307
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -32,14 +32,14 @@ ID:      TC3
 Title:   Empty items array
 Input:   POST /api/orders  table_id=1, items=[]
 Expected: HTTP 400, and no new row in orders or order_items
-Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 1833, order_items stayed at 6287, table 1 unchanged ("occupied")
+Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 1847, order_items stayed at 6307, table 1 unchanged ("occupied")
 Result:  PASS
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
 ID:      TC4
 Title:   Invalid status value on PUT /status
-Input:   PUT /api/orders/1833/status  status="refunded"
+Input:   PUT /api/orders/1867/status  status="refunded"
 Expected: HTTP 400, and the stored order status is unchanged
 Actual:  400 "Field "status" is required and must be one of: pending, preparing, served, paid.", stored status still "pending"
 Result:  PASS
@@ -54,7 +54,7 @@ Actual:  404 "Order 999999 not found."
 Result:  PASS
 ------------------------------------------------------------------------------
 
-Cleanup:       removed test order 1833, test customer "test-harness", reset table 1 to "free"
+Cleanup:       removed test order 1867, test customer "test-harness", reset table 1 to "free"
 
 ==============================================================================
 SUMMARY: 5/5 passed

@@ -15,11 +15,39 @@ const TOP_ITEMS_SQL =
 const DAILY_SALES_SQL =
   "SELECT DATE_FORMAT(sale_date, '%Y-%m-%d') AS sale_date, order_count, revenue, avg_order_value FROM v_daily_sales ORDER BY sale_date DESC LIMIT 14";
 
+const DAILY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseDailyDate(value) {
+  if (typeof value !== 'string' || !DAILY_DATE_PATTERN.test(value)) return null;
+
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return value;
+}
+
 function toTopItem(row) {
   return {
     item_id: row.item_id,
     item_name: row.item_name,
     total_quantity: Number(row.total_quantity),
+  };
+}
+
+function toDailyItem(row) {
+  return {
+    item_id: row.item_id,
+    item_name: row.item_name,
+    total_quantity: Number(row.total_quantity),
+    total_revenue: Number(row.total_revenue),
   };
 }
 
@@ -49,6 +77,33 @@ router.get('/daily-sales', async (req, res, next) => {
     const [rows] = await pool.execute(DAILY_SALES_SQL);
 
     return res.json({ data: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/reports/daily?date=YYYY-MM-DD
+router.get('/daily', async (req, res, next) => {
+  const date = parseDailyDate(req.query.date);
+  if (date === null) {
+    return res.status(400).json({ error: 'Field "date" is required and must use YYYY-MM-DD.' });
+  }
+
+  try {
+    const [resultSets] = await pool.execute('CALL sp_daily_sales(?)', [date]);
+    const summaryRows = Array.isArray(resultSets[0]) ? resultSets[0] : [];
+    const itemRows = Array.isArray(resultSets[1]) ? resultSets[1] : [];
+    const summary = summaryRows[0] || {};
+
+    return res.json({
+      data: {
+        date,
+        order_count: Number(summary.order_count || 0),
+        revenue: Number(summary.revenue || 0),
+        avg_order_value: Number(summary.avg_order_value || 0),
+        top_items: itemRows.map(toDailyItem),
+      },
+    });
   } catch (err) {
     next(err);
   }

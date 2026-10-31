@@ -1,5 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS order_status_log;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS staff;
@@ -91,4 +92,15 @@ CREATE TABLE order_items (
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (item_id) REFERENCES menu_items(item_id)
     ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. order status log
+CREATE TABLE order_status_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  old_status ENUM('pending', 'preparing', 'served', 'paid') NOT NULL,
+  new_status ENUM('pending', 'preparing', 'served', 'paid') NOT NULL,
+  changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(order_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
