@@ -8,6 +8,7 @@ const tableRoutes = require('./routes/tableRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const queryLabRoutes = require('./routes/queryLabRoutes');
+const schemaRoutes = require('./routes/schemaRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const { sqlContextMiddleware } = require('./lib/queryLog');
 
@@ -30,6 +31,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/query-lab', queryLabRoutes);
+app.use('/api/schema', schemaRoutes);
 
 app.use(errorHandler);
 
