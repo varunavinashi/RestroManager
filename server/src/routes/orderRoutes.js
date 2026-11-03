@@ -19,6 +19,13 @@ class RequestError extends Error {
   }
 }
 
+class ConflictError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
 function badRequest(res, message) {
   return res.status(400).json({ error: message });
 }
@@ -124,11 +131,14 @@ async function resolveCustomerId(connection, customerName) {
 async function insertOrder(connection, { tableId, customerName, staffId, lines }) {
   // get the table details
   const [tableRows] = await connection.execute(
-    'SELECT table_id, table_number FROM restaurant_tables WHERE table_id = ? FOR UPDATE',
+    'SELECT table_id, table_number, status FROM restaurant_tables WHERE table_id = ? FOR UPDATE',
     [tableId]
   );
   if (tableRows.length === 0) {
     throw new RequestError(`Field "table_id" refers to table ${tableId}, which does not exist.`);
+  }
+  if (tableRows[0].status === 'occupied') {
+    throw new ConflictError(`Table ${tableRows[0].table_number} is already occupied.`);
   }
 
   // get the staff details
@@ -263,6 +273,7 @@ router.post('/', async (req, res, next) => {
     }
   } catch (err) {
     if (err instanceof RequestError) return badRequest(res, err.message);
+    if (err instanceof ConflictError) return res.status(409).json({ error: err.message });
     if (err.sqlState === '45000') return badRequest(res, err.sqlMessage || err.message);
     next(err);
   }

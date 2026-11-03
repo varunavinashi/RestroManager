@@ -10,6 +10,7 @@ const TEST_CUSTOMER = 'test-harness';
 const MISSING_TABLE_ID = 999999;
 const MISSING_ORDER_ID = 999999;
 const INVALID_STATUS = 'refunded';
+const OCCUPIED_TABLE_NUMBER = 2;
 
 // tc1
 const PLANNED_QUANTITIES = [2, 1]; // number of items
@@ -246,6 +247,49 @@ async function tc5() {
   }
 }
 
+// tc6 - occupied table check
+async function tc6() {
+  beginCase('TC6', 'Order for an occupied table', `POST /api/orders  table_id=<table ${OCCUPIED_TABLE_NUMBER}>, items=[{item_id:${testItems[0].item_id},quantity:1}]`, `HTTP 409 with "Table ${OCCUPIED_TABLE_NUMBER} is already occupied.", and no new row in orders or order_items`);
+
+  const [tables] = await pool.execute(
+    'SELECT table_id, table_number, status FROM restaurant_tables WHERE table_number = ?',
+    [OCCUPIED_TABLE_NUMBER]
+  );
+  if (tables.length === 0) {
+    endCase('TC6', `table number ${OCCUPIED_TABLE_NUMBER} not found`, false);
+    return;
+  }
+
+  const table = tables[0];
+  const originalStatus = table.status;
+
+  try {
+    const ordersBefore = await countRows('orders');
+    const linesBefore = await countRows('order_items');
+
+    await pool.execute("UPDATE restaurant_tables SET status = 'occupied' WHERE table_id = ?", [table.table_id]);
+
+    const post = await request('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ table_id: table.table_id, items: [{ item_id: testItems[0].item_id, quantity: 1 }] }),
+    });
+
+    assert.equal(post.status, 409, `expected 409, got ${post.status} ${JSON.stringify(post.body)}`);
+    assert.equal(post.body.error, `Table ${table.table_number} is already occupied.`, `unexpected error message "${post.body.error}"`);
+
+    const ordersAfter = await countRows('orders');
+    const linesAfter = await countRows('order_items');
+    assert.equal(ordersAfter, ordersBefore, `orders went ${ordersBefore} -> ${ordersAfter}, expected no insert`);
+    assert.equal(linesAfter, linesBefore, `order_items went ${linesBefore} -> ${linesAfter}, expected no insert`);
+
+    endCase('TC6', `409 "${post.body.error}", orders stayed at ${ordersAfter}, order_items stayed at ${linesAfter}`, true);
+  } catch (err) {
+    endCase('TC6', err.message, false);
+  } finally {
+    await pool.execute('UPDATE restaurant_tables SET status = ? WHERE table_id = ?', [originalStatus, table.table_id]);
+  }
+}
+
 async function cleanup() {
   if (createdOrderId !== null) {
     await pool.execute('DELETE FROM orders WHERE order_id = ?', [createdOrderId]);
@@ -283,7 +327,7 @@ async function run() {
     log(`               item_id=${line.item_id} "${item.name}" Rs.${toMoney(item.price)} x${line.quantity}`);
   }
 
-  const cases = [tc1, tc2, tc3, tc4, tc5];
+  const cases = [tc1, tc2, tc3, tc4, tc5, tc6];
   for (const testCase of cases) {
     await testCase();
   }

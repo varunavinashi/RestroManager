@@ -1,0 +1,70 @@
+==============================================================================
+HackA47 RestroManager - Concurrency Demo
+==============================================================================
+Three experiments use separate mysql2 connections. Data changes are
+committed only where an experiment requires another transaction to see
+them, and every committed change is cleaned up afterwards.
+
+==============================================================================
+Demo 1 - Double booking
+==============================================================================
+Table 3 starts as "free" (table_id=3).
+
+Case 1a - no locking
+------------------------------------------------------------------------------
+Connection A reads table 3: "free".
+Connection B reads table 3: "free".
+Both connections see "free" and both decide the table is bookable.
+Connection A inserts order 1840.
+Connection B inserts order 1841.
+Without SELECT ... FOR UPDATE both inserts succeed: the table is double-booked.
+Both transactions rolled back, so neither demo order is kept.
+
+Case 1b - SELECT ... FOR UPDATE on the table row
+------------------------------------------------------------------------------
+Connection A locks table 3 and reads "free".
+Connection A inserts order 1842 and marks the table "occupied", still holding the lock.
+Connection B requests SELECT ... FOR UPDATE and waits for the row lock (400 ms so far).
+Connection A commits and releases the lock.
+Connection B acquires the lock after about 406 ms and reads "occupied".
+Connection B sees "occupied" and aborts; it inserts no order.
+
+Cleanup: removed demo order 1842 and restored table 3 to "free".
+
+==============================================================================
+Demo 2 - Isolation levels
+==============================================================================
+
+READ COMMITTED
+------------------------------------------------------------------------------
+Reader first read for item 1 "Samosa with Tamarind Chutney": Rs.90.00.
+Writer commits the price change to Rs.91.00.
+Reader second read inside the same transaction: Rs.91.00.
+The second read sees the other transaction's committed change.
+Restored item 1 price to Rs.90.00.
+
+REPEATABLE READ
+------------------------------------------------------------------------------
+Reader first read for item 1 "Samosa with Tamarind Chutney": Rs.90.00.
+Writer commits the price change to Rs.91.00.
+Reader second read inside the same transaction: Rs.90.00.
+The second read still sees the original snapshot; the committed change is invisible.
+Restored item 1 price to Rs.90.00.
+
+==============================================================================
+Demo 3 - Deadlock
+==============================================================================
+Connection A will lock item 1 ("Samosa with Tamarind Chutney") then item 2 ("Paneer Tikka Shashlik").
+Connection B will lock them in the opposite order.
+Connection A locks item 1.
+Connection B locks item 2.
+Connection A requests item 2, held by B, and waits.
+Connection B requests item 1, held by A, and waits; the cycle is closed.
+MySQL reports error 1213 (ER_LOCK_DEADLOCK) and rolls one transaction back.
+Both transactions are closed; no data was changed.
+Retry transaction locks item 1 then item 2 in a consistent order and succeeds.
+Retry transaction rolled back after proving the consistent lock order works.
+
+==============================================================================
+All three experiments completed.
+==============================================================================
