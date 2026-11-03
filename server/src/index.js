@@ -9,6 +9,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const queryLabRoutes = require('./routes/queryLabRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const { sqlContextMiddleware } = require('./lib/queryLog');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,6 +18,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
 }));
 app.use(express.json());
+app.use(sqlContextMiddleware);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

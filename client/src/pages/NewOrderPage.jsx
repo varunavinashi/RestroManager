@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getMenu } from '../api/menuApi'
 import { getTables } from '../api/tablesApi'
 import { createOrder } from '../api/ordersApi'
+import SqlPanel from '../components/SqlPanel'
 
 export default function NewOrderPage() {
   const navigate = useNavigate()
@@ -228,6 +229,8 @@ export default function NewOrderPage() {
           </button>
         </aside>
       </div>
+
+      <SqlPanel />
     </div>
   )
 }

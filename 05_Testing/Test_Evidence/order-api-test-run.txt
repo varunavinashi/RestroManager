@@ -1,20 +1,20 @@
 ==============================================================================
 HackA47 RestroManager - Order API Test Suite
 ==============================================================================
-Base URL:      http://localhost:5000
+Base URL:      http://127.0.0.1:5271
 Runner:        node:test-free (node:assert + global fetch), no test framework installed
-Evidence file: C:\Faltu\RestroManager\05_Testing\Test_Evidence\order-api-test-run.txt
+Evidence file: C:\Users\Utkarsh\Desktop\DBMS_SQL\RestroManager\05_Testing\Test_Evidence\order-api-test-run.txt
 Pre-flight:    GET /api/health -> 200 {"status":"ok"}
-Fixtures:      table_id=1 (table_number 1, status "free")
+Fixtures:      table_id=2 (table_number 2, status "free")
                item_id=1 "Samosa with Tamarind Chutney" Rs.90.00 x2
                item_id=2 "Paneer Tikka Shashlik" Rs.260.00 x1
 
 ------------------------------------------------------------------------------
 ID:      TC1
 Title:   Valid order (2 items, valid table)
-Input:   POST /api/orders  table_id=1, items=[{item_id:1,quantity:2},{item_id:2,quantity:1}]
+Input:   POST /api/orders  table_id=2, items=[{item_id:1,quantity:2},{item_id:2,quantity:1}]
 Expected: HTTP 201, order created with total_amount = 2 x item1.price + 1 x item2.price
-Actual:  201 created, order_id=1867, status=pending, Samosa with Tamarind Chutney x2 + Paneer Tikka Shashlik x1, total_amount=Rs.440.00
+Actual:  201 created, order_id=1833, status=pending, Samosa with Tamarind Chutney x2 + Paneer Tikka Shashlik x1, total_amount=Rs.440.00
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -23,23 +23,23 @@ ID:      TC2
 Title:   Invalid table_id (does not exist)
 Input:   POST /api/orders  table_id=999999, items=[{item_id:1,quantity:1}]
 Expected: HTTP 400 or 404, and no new row in orders or order_items
-Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 1847, order_items stayed at 6307
+Actual:  400 "Field "table_id" refers to table 999999, which does not exist.", orders stayed at 1833, order_items stayed at 6287
 Result:  PASS
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
 ID:      TC3
 Title:   Empty items array
-Input:   POST /api/orders  table_id=1, items=[]
+Input:   POST /api/orders  table_id=2, items=[]
 Expected: HTTP 400, and no new row in orders or order_items
-Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 1847, order_items stayed at 6307, table 1 unchanged ("occupied")
+Actual:  400 "Field "items" is required and must be a non-empty array of { item_id, quantity } objects, where quantity is a positive integer.", orders stayed at 1833, order_items stayed at 6287, table 2 unchanged ("occupied")
 Result:  PASS
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
 ID:      TC4
 Title:   Invalid status value on PUT /status
-Input:   PUT /api/orders/1867/status  status="refunded"
+Input:   PUT /api/orders/1833/status  status="refunded"
 Expected: HTTP 400, and the stored order status is unchanged
 Actual:  400 "Field "status" is required and must be one of: pending, preparing, served, paid.", stored status still "pending"
 Result:  PASS
@@ -54,13 +54,23 @@ Actual:  404 "Order 999999 not found."
 Result:  PASS
 ------------------------------------------------------------------------------
 
-Cleanup:       removed test order 1867, test customer "test-harness", reset table 1 to "free"
+------------------------------------------------------------------------------
+ID:      TC6
+Title:   Order for an occupied table
+Input:   POST /api/orders  table_id=<table 2>, items=[{item_id:1,quantity:1}]
+Expected: HTTP 409 with "Table 2 is already occupied.", and no new row in orders or order_items
+Actual:  409 "Table 2 is already occupied.", orders stayed at 1833, order_items stayed at 6287
+Result:  PASS
+------------------------------------------------------------------------------
+
+Cleanup:       removed test order 1833, test customer "test-harness", reset table 2 to "free"
 
 ==============================================================================
-SUMMARY: 5/5 passed
+SUMMARY: 6/6 passed
   PASS  TC1
   PASS  TC2
   PASS  TC3
   PASS  TC4
   PASS  TC5
+  PASS  TC6
 ==============================================================================

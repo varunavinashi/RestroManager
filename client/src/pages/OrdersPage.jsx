@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getOrders, getOrderById, updateOrderStatus } from '../api/ordersApi'
+import SqlPanel from '../components/SqlPanel'
 
 const ORDER_STATUSES = ['pending', 'preparing', 'served', 'paid']
 
@@ -9,28 +10,6 @@ const STATUS_BADGE = {
   served: 'bg-indigo-100 text-indigo-800',
   paid: 'bg-green-100 text-green-800',
 }
-
-// For later query display
-const ORDERS_LIST_SQL = `SELECT
-  o.order_id,
-  o.table_id,
-  t.table_number,
-  o.customer_id,
-  c.name AS customer_name,
-  o.staff_id,
-  s.name AS staff_name,
-  o.order_time,
-  o.status,
-  o.total_amount,
-  COUNT(oi.order_item_id) AS item_count
-FROM orders o
-JOIN restaurant_tables t ON t.table_id = o.table_id
-LEFT JOIN customers c ON c.customer_id = o.customer_id
-LEFT JOIN staff s ON s.staff_id = o.staff_id
-LEFT JOIN order_items oi ON oi.order_id = o.order_id
-GROUP BY o.order_id, o.table_id, t.table_number, o.customer_id, c.name,
-         o.staff_id, s.name, o.order_time, o.status, o.total_amount
-ORDER BY o.order_time DESC, o.order_id DESC;`
 
 const formatTime = (value) => {
   const date = new Date(value)
@@ -46,8 +25,6 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
-
-  const [showSql, setShowSql] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -126,21 +103,7 @@ export default function OrdersPage() {
         </p>
       )}
 
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowSql((prev) => !prev)}
-          className="text-sm font-medium text-amber-600 transition hover:text-amber-700"
-        >
-          {showSql ? 'Hide SQL query' : 'View SQL query'}
-        </button>
-
-        {showSql && (
-          <pre className="mt-2 overflow-x-auto rounded-lg border border-slate-200 bg-slate-900 p-4 text-xs leading-relaxed text-slate-100">
-            <code>{ORDERS_LIST_SQL}</code>
-          </pre>
-        )}
-      </div>
+      <SqlPanel />
 
       {orders.length === 0 ? (
         <p className="mt-6 text-slate-600">No orders placed yet</p>

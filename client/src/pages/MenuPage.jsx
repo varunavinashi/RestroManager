@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createMenuItem, deleteMenuItem, getMenu, updateMenuItem } from '../api/menuApi'
 import { getCategories } from '../api/categoriesApi'
+import SqlPanel from '../components/SqlPanel'
 
 const EMPTY_FORM = { name: '', category_id: '', price: '', is_available: true }
 
@@ -274,6 +275,8 @@ export default function MenuPage() {
           </section>
         ))
       )}
+
+      <SqlPanel />
     </div>
   )
 }

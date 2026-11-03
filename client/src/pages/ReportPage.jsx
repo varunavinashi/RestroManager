@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getReportSummary, getDailySales } from '../api/reportsApi'
+import SqlPanel from '../components/SqlPanel'
 
 export default function ReportPage() {
   const [summary, setSummary] = useState({
@@ -122,6 +123,8 @@ export default function ReportPage() {
           </table>
         </div>
       )}
+
+      <SqlPanel />
     </div>
   )
 }

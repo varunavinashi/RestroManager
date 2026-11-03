@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getTables, updateTableStatus } from '../api/tablesApi'
+import SqlPanel from '../components/SqlPanel'
 
 const NEXT_STATUS = { free: 'occupied', occupied: 'free' }
 
@@ -82,6 +83,8 @@ export default function TablesPage() {
           })}
         </div>
       )}
+
+      <SqlPanel />
     </div>
   )
 }
