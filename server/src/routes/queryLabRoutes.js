@@ -2,7 +2,14 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { performance } = require('perf_hooks');
-const pool = require('../config/db');
+const mainPool = require('../config/db');
+const readonlyPool = require('../config/dbReadonly');
+
+const pool = readonlyPool || mainPool;
+
+if (!readonlyPool) {
+  console.warn('DB_READONLY_USER/DB_READONLY_PASSWORD not set; Query Lab is using the main database pool.');
+}
 
 const router = express.Router();
 
