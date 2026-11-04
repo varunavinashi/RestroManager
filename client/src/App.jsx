@@ -7,6 +7,7 @@ import NewOrderPage from './pages/NewOrderPage'
 import ReportPage from './pages/ReportPage'
 import QueryLabPage from './pages/QueryLabPage'
 import SchemaPage from './pages/SchemaPage'
+import InsightsPage from './pages/InsightsPage'
 // import { getMenu } from "./api/menuApi";
 // import {useEffect} from 'react'
 
@@ -17,6 +18,7 @@ const NAV_LINKS = [
   { to: '/orders', label: 'Orders', end: true },
   { to: '/orders/new', label: 'New Order' },
   { to: '/reports', label: 'Reports' },
+  { to: '/insights', label: 'Insights' },
   { to: '/query-lab', label: 'Query Lab' },
   { to: '/schema', label: 'Schema' },
 ]
@@ -69,6 +71,7 @@ function App() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/reports" element={<ReportPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/query-lab" element={<QueryLabPage />} />
           <Route path="/schema" element={<SchemaPage />} />
         </Routes>

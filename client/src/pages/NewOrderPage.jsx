@@ -3,7 +3,29 @@ import { useNavigate } from 'react-router-dom'
 import { getMenu } from '../api/menuApi'
 import { getTables } from '../api/tablesApi'
 import { createOrder } from '../api/ordersApi'
+import { getRecommendations } from '../api/mlApi'
 import SqlPanel from '../components/SqlPanel'
+
+const BAR_WIDTHS = {
+  0: 'w-0',
+  10: 'w-[10%]',
+  20: 'w-[20%]',
+  30: 'w-[30%]',
+  40: 'w-[40%]',
+  50: 'w-[50%]',
+  60: 'w-[60%]',
+  70: 'w-[70%]',
+  80: 'w-[80%]',
+  90: 'w-[90%]',
+  100: 'w-full',
+}
+
+const barWidthClass = (value, max) => {
+  if (!max) return 'w-0'
+  const ratio = Number(value) / max
+  const pct = Math.max(0, Math.min(100, Math.round(ratio * 10) * 10))
+  return BAR_WIDTHS[pct] || 'w-0'
+}
 
 export default function NewOrderPage() {
   const navigate = useNavigate()
@@ -15,10 +37,40 @@ export default function NewOrderPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [placing, setPlacing] = useState(false)
+  const [recommendations, setRecommendations] = useState([])
+  const [recLoading, setRecLoading] = useState(false)
+  const [recError, setRecError] = useState(false)
 
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    if (cart.length === 0) return
+
+    let cancelled = false
+    setRecLoading(true)
+    setRecError(false)
+
+    const timer = setTimeout(async () => {
+      try {
+        const data = await getRecommendations(cart.map((entry) => entry.item_id), 3)
+        if (!cancelled) setRecommendations(data || [])
+      } catch {
+        if (!cancelled) {
+          setRecommendations([])
+          setRecError(true)
+        }
+      } finally {
+        if (!cancelled) setRecLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [cart])
 
   const fetchData = async () => {
     try {
@@ -71,6 +123,12 @@ export default function NewOrderPage() {
 
   // Totals are summed in cents
   const grandTotal = cart.reduce((cents, entry) => cents + Math.round(entry.price * 100) * entry.quantity, 0) / 100
+
+  const displayedRecommendations = recommendations.slice(0, 3)
+  const maxRecommendationScore = displayedRecommendations.reduce(
+    (max, item) => Math.max(max, Number(item.score) || 0),
+    0
+  )
 
   const handlePlaceOrder = async () => {
     if (!tableId) {
@@ -164,6 +222,54 @@ export default function NewOrderPage() {
                 )
               })}
             </div>
+          )}
+
+          {(!recError || cart.length === 0) && (
+            <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold text-slate-800">Customers also order</h2>
+                <span className="text-xs text-slate-500">Based on synthetic order history</span>
+              </div>
+
+              {cart.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">Add an item to see suggestions</p>
+              ) : recLoading ? (
+                <p className="mt-3 text-sm text-slate-600">Finding suggestions…</p>
+              ) : displayedRecommendations.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">No suggestions for this cart yet.</p>
+              ) : (
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  {displayedRecommendations.map((item) => (
+                    <div
+                      key={item.item_id}
+                      className="flex flex-col justify-between rounded-lg border border-slate-200 p-3"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-800">{item.name}</p>
+                        <p className="text-sm text-slate-600">₹{Number(item.price).toFixed(2)}</p>
+                      </div>
+                      <div className="mt-3">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className={`h-1.5 rounded-full bg-amber-500 ${barWidthClass(
+                              item.score,
+                              maxRecommendationScore
+                            )}`}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addToCart(item)}
+                          className="mt-3 w-full rounded-lg border border-amber-500 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           )}
         </div>
 
