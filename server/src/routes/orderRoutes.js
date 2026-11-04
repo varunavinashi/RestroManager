@@ -157,7 +157,7 @@ async function insertOrder(connection, { tableId, customerName, staffId, lines }
   const placeholders = itemIds.map(() => '?').join(', ');
   // get details of items
   const [menuRows] = await connection.execute(
-    `SELECT item_id, name, price FROM menu_items WHERE item_id IN (${placeholders}) FOR SHARE`,
+    `SELECT item_id, name, price FROM menu_items WHERE item_id IN (${placeholders}) FOR UPDATE`,
     itemIds
   );
 
@@ -275,7 +275,7 @@ router.post('/', async (req, res, next) => {
     if (err instanceof RequestError) return badRequest(res, err.message);
     if (err instanceof ConflictError) return res.status(409).json({ error: err.message });
     if (err.sqlState === '45000') return badRequest(res, err.sqlMessage || err.message);
-    next(err);
+    return next(err);
   }
 
   return res.status(201).json({ message: 'Order placed.', data: created });
