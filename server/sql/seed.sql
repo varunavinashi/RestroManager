@@ -72,7 +72,7 @@ INSERT INTO staff (name, role) VALUES
   ('Suyash Singh', 'manager'),
   ('Utkarsh Amritraj', 'waiter'),
   ('Varun Avinashi', 'chef'),
-  ('Priya Nair', 'readonly');
+  ('Utkarsh Srivastava', 'readonly');
 
 INSERT INTO customers (name, phone) VALUES
   ('John Doe', '+1-555-0143'),

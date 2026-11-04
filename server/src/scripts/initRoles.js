@@ -12,7 +12,7 @@ const initRoles = async () => {
     throw new Error('DEMO_ROLE_PASSWORD is not set in .env.');
   }
 
-  const readonlyPassword = process.env.DB_READONLY_PASSWORD || password;
+  const readonlyPassword = process.env.DB_READONLY_PASSWORD;
   const dbName = process.env.DB_NAME || 'hacka47_restaurant';
   const template = fs.readFileSync(SQL_PATH, 'utf8');
 

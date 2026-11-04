@@ -6,8 +6,8 @@ CREATE USER IF NOT EXISTS 'restro_chef_user'@'localhost' IDENTIFIED BY __PASSWOR
 ALTER USER 'restro_chef_user'@'localhost' IDENTIFIED BY __PASSWORD__;
 CREATE USER IF NOT EXISTS 'restro_manager_user'@'localhost' IDENTIFIED BY __PASSWORD__;
 ALTER USER 'restro_manager_user'@'localhost' IDENTIFIED BY __PASSWORD__;
-CREATE USER IF NOT EXISTS 'restro_readonly_user'@'localhost' IDENTIFIED BY 'lovely';
-ALTER USER 'restro_readonly_user'@'localhost' IDENTIFIED BY 'lovely';
+CREATE USER IF NOT EXISTS 'restro_readonly_user'@'localhost' IDENTIFIED BY __PASSWORD__;
+ALTER USER 'restro_readonly_user'@'localhost' IDENTIFIED BY __PASSWORD__;
 
 GRANT SELECT ON __DB_NAME__.menu_items TO 'restro_waiter';
 GRANT SELECT ON __DB_NAME__.categories TO 'restro_waiter';

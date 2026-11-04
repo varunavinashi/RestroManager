@@ -14,9 +14,9 @@ const STAFF_LOGINS = [
 ];
 
 const run = async () => {
-  const password = process.env.DEMO_ROLE_PASSWORD;
+  const password = process.env.WEB_PASSWORD;
   if (!password) {
-    throw new Error('DEMO_ROLE_PASSWORD is not set in .env.');
+    throw new Error('WEB_PASSWORD is not set in .env.');
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
