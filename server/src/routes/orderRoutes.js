@@ -206,11 +206,19 @@ async function insertOrder(connection, { tableId, customerName, staffId, lines }
 // GET /api/orders
 router.get('/', async (req, res, next) => {
   try {
-    const sql = `SELECT ${ORDER_COLUMNS}, COUNT(oi.order_item_id) AS item_count ${ORDER_FROM} LEFT JOIN order_items oi ON oi.order_id = o.order_id GROUP BY o.order_id, o.table_id, t.table_number, o.customer_id, c.name, o.staff_id, s.name, o.order_time, o.status, o.total_amount ORDER BY o.order_time DESC, o.order_id DESC`;
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
 
-    const [rows] = await pool.execute(sql);
+    const countSql = 'SELECT COUNT(*) as total FROM orders';
+    const [countRows] = await pool.execute(countSql);
+    const totalCount = countRows[0].total;
+
+    const sql = `SELECT ${ORDER_COLUMNS}, COUNT(oi.order_item_id) AS item_count ${ORDER_FROM} LEFT JOIN order_items oi ON oi.order_id = o.order_id GROUP BY o.order_id, o.table_id, t.table_number, o.customer_id, c.name, o.staff_id, s.name, o.order_time, o.status, o.total_amount ORDER BY o.order_time DESC, o.order_id DESC LIMIT ? OFFSET ?`;
+
+    const [rows] = await pool.execute(sql, [pageSize, offset]);
     const data = rows.map((row) => ({ ...toOrder(row), item_count: Number(row.item_count) }));
-    return res.json({ data });
+    return res.json({ data: { orders: data, totalCount } });
   } catch (err) {
     next(err);
   }

@@ -7,8 +7,8 @@ export const createOrder = async (order) => {
 }
 
 // GET /api/orders
-export const getOrders = async () => {
-  const res = await api.get('/orders')
+export const getOrders = async (params = {}) => {
+  const res = await api.get('/orders', { params })
   return res.data.data
 }
 

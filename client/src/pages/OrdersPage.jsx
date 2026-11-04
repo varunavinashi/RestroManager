@@ -21,6 +21,10 @@ export default function OrdersPage({ canUpdateStatus = true }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [expandedId, setExpandedId] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -28,14 +32,15 @@ export default function OrdersPage({ canUpdateStatus = true }) {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [currentPage])
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getOrders()
-      setOrders(data)
+      const res = await getOrders({ page: currentPage, pageSize })
+      setOrders(res.orders)
+      setTotalCount(res.totalCount)
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load orders')
     } finally {
@@ -101,52 +106,6 @@ export default function OrdersPage({ canUpdateStatus = true }) {
         <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </p>
-      )}
-
-      <SqlPanel />
-
-      {orders.length === 0 ? (
-        <p className="mt-6 text-slate-600">No orders placed yet</p>
-      ) : (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
-              <tr>
-                <th className="px-4 py-3 font-medium">Table</th>
-                <th className="px-4 py-3 font-medium">Items</th>
-                <th className="px-4 py-3 font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Order time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => {
-                const isExpanded = expandedId === order.order_id
-                return (
-                  <tr
-                    key={order.order_id}
-                    onClick={() => handleToggleRow(order.order_id)}
-                    className="cursor-pointer border-b border-slate-100 align-top transition last:border-b-0 hover:bg-slate-50"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-800">Table {order.table_number}</td>
-                    <td className="px-4 py-3 text-slate-700">{order.item_count}</td>
-                    <td className="px-4 py-3 text-slate-800">₹{Number(order.total_amount).toFixed(2)}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
-                          STATUS_BADGE[order.status] || 'bg-slate-100 text-slate-800'
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{formatTime(order.order_time)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
       )}
 
       {expandedId !== null && (
@@ -215,6 +174,78 @@ export default function OrdersPage({ canUpdateStatus = true }) {
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      <SqlPanel />
+
+      {orders.length === 0 ? (
+        <p className="mt-6 text-slate-600">No orders placed yet</p>
+      ) : (
+        <div className="mt-4">
+          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Table</th>
+                  <th className="px-4 py-3 font-medium">Items</th>
+                  <th className="px-4 py-3 font-medium">Total</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Order time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => {
+                  const isExpanded = expandedId === order.order_id
+                  return (
+                    <tr
+                      key={order.order_id}
+                      onClick={() => handleToggleRow(order.order_id)}
+                      className="cursor-pointer border-b border-slate-100 align-top transition last:border-b-0 hover:bg-slate-50"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800">Table {order.table_number}</td>
+                      <td className="px-4 py-3 text-slate-700">{order.item_count}</td>
+                      <td className="px-4 py-3 text-slate-800">₹{Number(order.total_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+                            STATUS_BADGE[order.status] || 'bg-slate-100 text-slate-800'
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">{formatTime(order.order_time)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between px-2">
+            <p className="text-sm text-slate-600">
+              Page {currentPage} of {Math.ceil(totalCount / pageSize)} ({totalCount} total orders)
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={currentPage * pageSize >= totalCount}
+                className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
