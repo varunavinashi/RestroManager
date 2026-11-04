@@ -1,13 +1,20 @@
 import { Link } from 'react-router-dom'
 
 // Dashboard link page
-export default function HomePage() {
+export default function HomePage({ user }) {
   const links = [
     { to: '/menu', label: 'Menu', description: 'Browse and manage menu items.' },
     { to: '/tables', label: 'Tables', description: 'See which tables are free or occupied.' },
     { to: '/orders', label: 'Orders', description: 'Track placed orders and their status.' },
-    { to: '/orders/new', label: 'New Order', description: 'Build a cart and place an order.' },
+    {
+      to: '/orders/new',
+      label: 'New Order',
+      description: 'Build a cart and place an order.',
+      roles: ['waiter', 'manager'],
+    },
   ]
+
+  const visibleLinks = links.filter((link) => !link.roles || link.roles.includes(user.role))
 
   return (
     <div className="p-6">
@@ -15,7 +22,7 @@ export default function HomePage() {
       <p className="mt-1 text-slate-600">Restaurant &amp; Food Service Management System</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {links.map((link) => (
+        {visibleLinks.map((link) => (
           <Link
             key={link.to}
             to={link.to}

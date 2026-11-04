@@ -3,8 +3,8 @@ HackA47 RestroManager - RBAC Demo
 ==============================================================================
 Database: hacka47_restaurant
 Host:     localhost:3306
-Passwords are read from DEMO_ROLE_PASSWORD and are never printed.
-Fixtures: table_id=1, item_id=1, order_id=1, probe=rbac_probe_1793793194599
+Passwords are read from DEMO_ROLE_PASSWORD / DB_READONLY_PASSWORD and are never printed.
+Fixtures: table_id=1, item_id=1, order_id=1, probe=rbac_probe_1793824123454
 
 ==============================================================================
 ROLE: restro_waiter   USER: restro_waiter_user@localhost
@@ -22,8 +22,8 @@ SELECT hacka47_restaurant.staff.password_hash
   expected DENIED | actual DENIED (MySQL 1143: SELECT command denied to user 'restro_waiter_user'@'localhost' for column 'password_hash' in table 'staff') | PASS
 CALL hacka47_restaurant.sp_daily_sales
   expected DENIED | actual DENIED (MySQL 1370: execute command denied to user 'restro_waiter_user'@'localhost' for routine 'hacka47_restaurant.sp_daily_sales') | PASS
-DROP TABLE hacka47_restaurant.rbac_probe_1793793194599
-  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_waiter_user'@'localhost' for table 'rbac_probe_1793793194599') | PASS
+DROP TABLE hacka47_restaurant.rbac_probe_1793824123454
+  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_waiter_user'@'localhost' for table 'rbac_probe_1793824123454') | PASS
 
 ==============================================================================
 ROLE: restro_chef   USER: restro_chef_user@localhost
@@ -41,8 +41,8 @@ SELECT hacka47_restaurant.staff.password_hash
   expected DENIED | actual DENIED (MySQL 1142: SELECT command denied to user 'restro_chef_user'@'localhost' for table 'staff') | PASS
 CALL hacka47_restaurant.sp_daily_sales
   expected DENIED | actual DENIED (MySQL 1370: execute command denied to user 'restro_chef_user'@'localhost' for routine 'hacka47_restaurant.sp_daily_sales') | PASS
-DROP TABLE hacka47_restaurant.rbac_probe_1793793194599
-  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_chef_user'@'localhost' for table 'rbac_probe_1793793194599') | PASS
+DROP TABLE hacka47_restaurant.rbac_probe_1793824123454
+  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_chef_user'@'localhost' for table 'rbac_probe_1793824123454') | PASS
 
 ==============================================================================
 ROLE: restro_manager   USER: restro_manager_user@localhost
@@ -60,8 +60,8 @@ SELECT hacka47_restaurant.staff.password_hash
   expected DENIED | actual DENIED (MySQL 1143: SELECT command denied to user 'restro_manager_user'@'localhost' for column 'password_hash' in table 'staff') | PASS
 CALL hacka47_restaurant.sp_daily_sales
   expected ALLOWED | actual ALLOWED | PASS
-DROP TABLE hacka47_restaurant.rbac_probe_1793793194599
-  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_manager_user'@'localhost' for table 'rbac_probe_1793793194599') | PASS
+DROP TABLE hacka47_restaurant.rbac_probe_1793824123454
+  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_manager_user'@'localhost' for table 'rbac_probe_1793824123454') | PASS
 
 ==============================================================================
 ROLE: restro_readonly   USER: restro_readonly_user@localhost
@@ -79,8 +79,8 @@ SELECT hacka47_restaurant.staff.password_hash
   expected ALLOWED | actual ALLOWED | PASS
 CALL hacka47_restaurant.sp_daily_sales
   expected ALLOWED | actual ALLOWED | PASS
-DROP TABLE hacka47_restaurant.rbac_probe_1793793194599
-  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_readonly_user'@'localhost' for table 'rbac_probe_1793793194599') | PASS
+DROP TABLE hacka47_restaurant.rbac_probe_1793824123454
+  expected DENIED | actual DENIED (MySQL 1142: DROP command denied to user 'restro_readonly_user'@'localhost' for table 'rbac_probe_1793824123454') | PASS
 
 ==============================================================================
 SHOW GRANTS
@@ -126,7 +126,9 @@ SHOW GRANTS FOR 'restro_readonly_user'@'localhost' USING 'restro_readonly'
   GRANT USAGE ON *.* TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`categories` TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`customers` TO `restro_readonly_user`@`localhost`
+  GRANT SELECT ON `hacka47_restaurant`.`item_recommendations` TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`menu_items` TO `restro_readonly_user`@`localhost`
+  GRANT SELECT ON `hacka47_restaurant`.`ml_model_runs` TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`order_items` TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`order_status_log` TO `restro_readonly_user`@`localhost`
   GRANT SELECT ON `hacka47_restaurant`.`orders` TO `restro_readonly_user`@`localhost`

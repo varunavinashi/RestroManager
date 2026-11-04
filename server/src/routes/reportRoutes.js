@@ -4,7 +4,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.use(authenticate, requireRole('manager'));
+router.use(authenticate, requireRole('manager', 'readonly'));
 
 // order count and total revenue for today
 const TODAY_SQL =

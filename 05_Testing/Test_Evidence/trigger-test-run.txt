@@ -7,7 +7,7 @@ Evidence file: M:\Academics\Local_Web-dev\RestroManager\05_Testing\Test_Evidence
 ID:       TC1
 Title:    Insert order with two items; trigger sets total_amount
 Expected: orders.total_amount equals the two line totals
-Actual:   order 1772 total_amount=700.00 from trigger only
+Actual:   order 1757 total_amount=700.00 from trigger only
 Result:   PASS
 
 ID:       TC2
@@ -43,13 +43,13 @@ Result:   PASS
 ID:       TC7
 Title:    Compare fn_order_total with orders.total_amount
 Expected: all 5 random orders match
-Actual:   5/5 orders matched (1651, 1535, 1591, 1742, 1480)
+Actual:   5/5 orders matched (1265, 1289, 1196, 645, 1396)
 Result:   PASS
 
 ID:       TC8
 Title:    Compare sp_daily_sales with v_daily_sales for yesterday
 Expected: order count, revenue and average match
-Actual:   2026-11-03: count=19, revenue=25780.00, avg=1356.84
+Actual:   2026-11-04: count=18, revenue=25355.00, avg=1408.61
 Result:   PASS
 
 ==============================================================================

@@ -35,7 +35,7 @@ const getStoredUser = () => {
 
 function canSeeLink(link, user) {
   if (link.to === '/orders/new') return user.role === 'waiter' || user.role === 'manager'
-  if (link.to === '/reports') return user.role === 'manager'
+  if (link.to === '/reports') return user.role === 'manager' || user.role === 'readonly'
   return true
 }
 
@@ -123,7 +123,7 @@ function App() {
             path="/"
             element={
               <RequireAuth isAuthenticated={isAuthenticated} user={user}>
-                <HomePage />
+                <HomePage user={user} />
               </RequireAuth>
             }
           />
@@ -131,7 +131,7 @@ function App() {
             path="/menu"
             element={
               <RequireAuth isAuthenticated={isAuthenticated} user={user}>
-                <MenuPage />
+                <MenuPage canManage={user?.role === 'manager'} />
               </RequireAuth>
             }
           />
@@ -139,7 +139,7 @@ function App() {
             path="/tables"
             element={
               <RequireAuth isAuthenticated={isAuthenticated} user={user}>
-                <TablesPage />
+                <TablesPage canToggle={user?.role === 'waiter' || user?.role === 'manager'} />
               </RequireAuth>
             }
           />
@@ -147,7 +147,7 @@ function App() {
             path="/orders"
             element={
               <RequireAuth isAuthenticated={isAuthenticated} user={user}>
-                <OrdersPage />
+                <OrdersPage canUpdateStatus={user?.role !== 'readonly'} />
               </RequireAuth>
             }
           />
@@ -166,7 +166,7 @@ function App() {
           <Route
             path="/reports"
             element={
-              <RequireAuth isAuthenticated={isAuthenticated} user={user} roles={['manager']}>
+              <RequireAuth isAuthenticated={isAuthenticated} user={user} roles={['manager', 'readonly']}>
                 <ReportPage />
               </RequireAuth>
             }

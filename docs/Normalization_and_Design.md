@@ -127,7 +127,7 @@ Notes:
 | BR16 | An order item price snapshot cannot be negative. | `CHECK chk_item_price (price_at_order >= 0)` |
 | BR17 | Every order item must reference an existing order; deleting an order deletes its order items. | FK `order_items.order_id` → `orders.order_id`, `ON DELETE CASCADE`, `ON UPDATE CASCADE` |
 | BR18 | Every order item must reference an existing menu item; a menu item referenced by order items cannot be deleted. | FK `order_items.item_id` → `menu_items.item_id`, `ON DELETE RESTRICT`, `ON UPDATE CASCADE` |
-| BR19 | `orders.total_amount` should equal `SUM(order_items.quantity * order_items.price_at_order)` for the order. | **planned trigger**; not present in `schema.sql` |
+| BR19 | `orders.total_amount` should equal `SUM(order_items.quantity * order_items.price_at_order)` for the order. | Trigger-enforced: `trg_order_items_ai`, `trg_order_items_au`, and `trg_order_items_ad` recompute the parent order total after item insert/update/delete (`routines.sql`) |
 | BR20 | `order_items.price_at_order` records the menu item's price at the time the order item is written, not a live reference to the current `menu_items.price`. | Application/order-write path; no trigger or FK in `schema.sql` enforces equality with the current menu price |
 | BR21 | An order may exist without a customer or without a staff member. | `orders.customer_id` and `orders.staff_id` are nullable; neither is `NOT NULL` |
 
@@ -229,7 +229,11 @@ order_item_id -> order_id, item_id, quantity, price_at_order
   SUM(order_items.quantity * order_items.price_at_order)
   ```
 
-  grouped by `order_items.order_id`. It is stored on `orders` for fast reads. A trigger to keep `orders.total_amount` consistent with `order_items` is **planned**; no such trigger is present in `schema.sql`. The existing `chk_order_total` check only enforces that the stored value is non-negative; it does not verify the arithmetic.
+  grouped by `order_items.order_id`. It is stored on `orders` for fast reads. The
+  triggers `trg_order_items_ai`, `trg_order_items_au`, and `trg_order_items_ad`
+  recompute `orders.total_amount` from `order_items` after every insert, update,
+  or delete, so the stored value stays consistent with the line items; the
+  `chk_order_total` check additionally enforces that it is non-negative.
 - **`order_items.price_at_order`** is a historical snapshot of the menu item's price at the time the order item was written. It is not a transitive dependency on the current `menu_items.price`: the menu price may change later, while the historical order line must retain the price that applied when the order was placed.
 
 ---

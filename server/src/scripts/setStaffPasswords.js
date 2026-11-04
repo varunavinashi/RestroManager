@@ -10,6 +10,7 @@ const STAFF_LOGINS = [
   { username: 'waiter1', role: 'waiter' },
   { username: 'chef1', role: 'chef' },
   { username: 'manager1', role: 'manager' },
+  { username: 'readonly1', role: 'readonly' },
 ];
 
 const run = async () => {

@@ -16,7 +16,7 @@ const formatTime = (value) => {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString()
 }
 
-export default function OrdersPage() {
+export default function OrdersPage({ canUpdateStatus = true }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -154,18 +154,30 @@ export default function OrdersPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-800">Order #{expandedId}</h2>
 
-            <select
-              value={selectedOrder ? selectedOrder.status : ''}
-              onChange={(event) => handleStatusChange(expandedId, event.target.value)}
-              disabled={updatingId === expandedId || !selectedOrder}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none disabled:opacity-60"
-            >
-              {ORDER_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+            {canUpdateStatus ? (
+              <select
+                value={selectedOrder ? selectedOrder.status : ''}
+                onChange={(event) => handleStatusChange(expandedId, event.target.value)}
+                disabled={updatingId === expandedId || !selectedOrder}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none disabled:opacity-60"
+              >
+                {ORDER_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              selectedOrder && (
+                <span
+                  className={`rounded px-2 py-0.5 text-xs font-medium ${
+                    STATUS_BADGE[selectedOrder.status] || 'bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  {selectedOrder.status}
+                </span>
+              )
+            )}
           </div>
 
           {detailLoading ? (

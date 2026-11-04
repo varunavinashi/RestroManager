@@ -54,7 +54,7 @@ CREATE TABLE customers (
 CREATE TABLE staff (
   staff_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  role ENUM('waiter', 'manager', 'chef') NOT NULL,
+  role ENUM('waiter', 'manager', 'chef', 'readonly') NOT NULL,
   username VARCHAR(50) NULL UNIQUE,
   password_hash VARCHAR(255) NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,

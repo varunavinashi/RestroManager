@@ -69,9 +69,10 @@ INSERT INTO restaurant_tables (table_number, capacity, status) VALUES
   (8, 10, 'free');
 
 INSERT INTO staff (name, role) VALUES
-  ('Carlos Mendez', 'manager'),
-  ('Emily Watson', 'waiter'),
-  ('Marco Rossi', 'chef');
+  ('Suyash Singh', 'manager'),
+  ('Utkarsh Amritraj', 'waiter'),
+  ('Varun Avinashi', 'chef'),
+  ('Priya Nair', 'readonly');
 
 INSERT INTO customers (name, phone) VALUES
   ('John Doe', '+1-555-0143'),

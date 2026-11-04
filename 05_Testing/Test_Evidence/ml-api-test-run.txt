@@ -5,6 +5,7 @@ Base URL:      http://localhost:5000
 Runner:        node:test-free (node:assert + global fetch), no test framework installed
 Evidence file: M:\Academics\Local_Web-dev\RestroManager\05_Testing\Test_Evidence\ml-api-test-run.txt
 Pre-flight:    GET /api/health -> 200 {"status":"ok"}
+Pre-flight:    POST /api/auth/login -> 200 (username "manager1")
 Fixtures:      item_recommendations has 400 rows
                cart item_ids=1,2
                top recommendation for item 1 is item 14
@@ -14,7 +15,7 @@ ID:      TC1
 Title:   Valid cart recommendations
 Input:   GET /api/ml/recommendations?item_ids=1,2&limit=3
 Expected: HTTP 200, { data: [...] } with at most 3 available items, summed scores, no cart items, score descending
-Actual:  200, 3 row(s): Jeera Rice (#27, score 0.25783, Breads & Rice, Rs.130.00); Chicken Biryani (#12, score 0.14248, Main Courses, Rs.320.00); Dal Makhani (#14, score 0.13775, Main Courses, Rs.240.00)
+Actual:  200, 3 row(s): Jeera Rice (#27, score 0.25839, Breads & Rice, Rs.130.00); Paneer Butter Masala (#15, score 0.21389, Main Courses, Rs.280.00); Butter Chicken (#8, score 0.21102, Main Courses, Rs.340.00)
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -50,7 +51,7 @@ ID:      TC5
 Title:   Latest model run metrics
 Input:   GET /api/ml/metrics
 Expected: HTTP 200 with model_name, hit_at_3, mrr_at_3, n_*_orders, trained_at and a "models" array, matching the latest ml_model_runs row
-Actual:  200, cosine, Hit@3=0.29963, MRR@3=0.24844, splits=1215/274/267, models=[popularity, cooccurrence, cosine]
+Actual:  200, cosine, Hit@3=0.26154, MRR@3=0.19872, splits=1209/270/260, models=[popularity, cooccurrence, cosine]
 Result:  PASS
 ------------------------------------------------------------------------------
 
@@ -59,7 +60,7 @@ ID:      TC6
 Title:   Highest-scored recommendation pairs
 Input:   GET /api/ml/top-pairs?limit=5
 Expected: HTTP 200 with at most 5 rows, both item names present, score descending
-Actual:  200, 5 row(s), top: Chicken Biryani -> Boondi Raita (0.61913)
+Actual:  200, 5 row(s), top: Chicken Biryani -> Boondi Raita (0.63528)
 Result:  PASS
 ------------------------------------------------------------------------------
 

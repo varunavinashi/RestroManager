@@ -12,6 +12,7 @@ const initRoles = async () => {
     throw new Error('DEMO_ROLE_PASSWORD is not set in .env.');
   }
 
+  const readonlyPassword = process.env.DB_READONLY_PASSWORD || password;
   const dbName = process.env.DB_NAME || 'hacka47_restaurant';
   const template = fs.readFileSync(SQL_PATH, 'utf8');
 
@@ -25,9 +26,11 @@ const initRoles = async () => {
   });
 
   try {
-    const sql = template.replace(/__DB_NAME__|__PASSWORD__/g, (token) =>
-      token === '__DB_NAME__' ? mysql.escapeId(dbName) : mysql.escape(password)
-    );
+    const sql = template.replace(/__DB_NAME__|__READONLY_PASSWORD__|__PASSWORD__/g, (token) => {
+      if (token === '__DB_NAME__') return mysql.escapeId(dbName);
+      if (token === '__READONLY_PASSWORD__') return mysql.escape(readonlyPassword);
+      return mysql.escape(password);
+    });
 
     console.log('Executing roles.sql...');
     await connection.query(sql);
@@ -38,9 +41,11 @@ const initRoles = async () => {
 };
 
 initRoles().catch((err) => {
-  const password = process.env.DEMO_ROLE_PASSWORD;
-  const message = String(err.message || err);
-  const safeMessage = password ? message.split(password).join('[redacted]') : message;
+  const secrets = [process.env.DEMO_ROLE_PASSWORD, process.env.DB_READONLY_PASSWORD].filter(Boolean);
+  const safeMessage = secrets.reduce(
+    (message, secret) => message.split(secret).join('[redacted]'),
+    String(err.message || err)
+  );
   console.error('Error during role initialization:', safeMessage);
   process.exit(1);
 });

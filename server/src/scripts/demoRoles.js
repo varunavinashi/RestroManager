@@ -13,6 +13,8 @@ const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306;
 const DB_NAME = process.env.DB_NAME || 'hacka47_restaurant';
 const PASSWORD = process.env.DEMO_ROLE_PASSWORD;
+const READONLY_PASSWORD = process.env.DB_READONLY_PASSWORD || PASSWORD;
+const SECRETS = [PASSWORD, READONLY_PASSWORD].filter(Boolean);
 
 const USERS = [
   { role: 'restro_waiter', user: 'restro_waiter_user' },
@@ -33,7 +35,7 @@ const log = (line = '') => {
 
 const redact = (value) => {
   const text = String(value || '');
-  return PASSWORD ? text.split(PASSWORD).join('[redacted]') : text;
+  return SECRETS.reduce((result, secret) => result.split(secret).join('[redacted]'), text);
 };
 
 const expectedFor = (waiter, chef, manager, readonly) => ({
@@ -52,7 +54,7 @@ const connectAs = (user) =>
     host: DB_HOST,
     port: DB_PORT,
     user,
-    password: PASSWORD,
+    password: user === 'restro_readonly_user' ? READONLY_PASSWORD : PASSWORD,
     database: DB_NAME,
     multipleStatements: false,
   });
@@ -185,7 +187,7 @@ const run = async () => {
   log('='.repeat(78));
   log(`Database: ${DB_NAME}`);
   log(`Host:     ${DB_HOST}:${DB_PORT}`);
-  log('Passwords are read from DEMO_ROLE_PASSWORD and are never printed.');
+  log('Passwords are read from DEMO_ROLE_PASSWORD / DB_READONLY_PASSWORD and are never printed.');
 
   if (!PASSWORD) {
     throw new Error('DEMO_ROLE_PASSWORD is not set in .env.');

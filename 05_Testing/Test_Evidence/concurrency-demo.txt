@@ -15,21 +15,21 @@ Case 1a - no locking
 Connection A reads table 3: "free".
 Connection B reads table 3: "free".
 Both connections see "free" and both decide the table is bookable.
-Connection A inserts order 1781.
-Connection B inserts order 1782.
+Connection A inserts order 1766.
+Connection B inserts order 1767.
 Without SELECT ... FOR UPDATE both inserts succeed: the table is double-booked.
 Both transactions rolled back, so neither demo order is kept.
 
 Case 1b - SELECT ... FOR UPDATE on the table row
 ------------------------------------------------------------------------------
 Connection A locks table 3 and reads "free".
-Connection A inserts order 1783 and marks the table "occupied", still holding the lock.
+Connection A inserts order 1768 and marks the table "occupied", still holding the lock.
 Connection B requests SELECT ... FOR UPDATE and waits for the row lock (400 ms so far).
 Connection A commits and releases the lock.
-Connection B acquires the lock after about 417 ms and reads "occupied".
+Connection B acquires the lock after about 411 ms and reads "occupied".
 Connection B sees "occupied" and aborts; it inserts no order.
 
-Cleanup: removed demo order 1783 and restored table 3 to "free".
+Cleanup: removed demo order 1768 and restored table 3 to "free".
 
 ==============================================================================
 Demo 2 - Isolation levels

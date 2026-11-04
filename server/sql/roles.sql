@@ -6,8 +6,8 @@ CREATE USER IF NOT EXISTS 'restro_chef_user'@'localhost' IDENTIFIED BY __PASSWOR
 ALTER USER 'restro_chef_user'@'localhost' IDENTIFIED BY __PASSWORD__;
 CREATE USER IF NOT EXISTS 'restro_manager_user'@'localhost' IDENTIFIED BY __PASSWORD__;
 ALTER USER 'restro_manager_user'@'localhost' IDENTIFIED BY __PASSWORD__;
-CREATE USER IF NOT EXISTS 'restro_readonly_user'@'localhost' IDENTIFIED BY __PASSWORD__;
-ALTER USER 'restro_readonly_user'@'localhost' IDENTIFIED BY __PASSWORD__;
+CREATE USER IF NOT EXISTS 'restro_readonly_user'@'localhost' IDENTIFIED BY 'lovely';
+ALTER USER 'restro_readonly_user'@'localhost' IDENTIFIED BY 'lovely';
 
 GRANT SELECT ON __DB_NAME__.menu_items TO 'restro_waiter';
 GRANT SELECT ON __DB_NAME__.categories TO 'restro_waiter';
@@ -57,6 +57,8 @@ GRANT SELECT ON __DB_NAME__.v_order_summary TO 'restro_readonly';
 GRANT SELECT ON __DB_NAME__.v_daily_sales TO 'restro_readonly';
 GRANT SELECT ON __DB_NAME__.v_item_sales TO 'restro_readonly';
 GRANT SELECT ON __DB_NAME__.v_table_status TO 'restro_readonly';
+GRANT SELECT ON __DB_NAME__.item_recommendations TO 'restro_readonly';
+GRANT SELECT ON __DB_NAME__.ml_model_runs TO 'restro_readonly';
 GRANT EXECUTE ON PROCEDURE __DB_NAME__.sp_daily_sales TO 'restro_readonly';
 
 GRANT 'restro_waiter' TO 'restro_waiter_user'@'localhost';

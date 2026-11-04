@@ -1,25 +1,25 @@
 Index EXPLAIN demo
-Synthetic order data; date range: 2026-10-28 00:00:00 to 2026-11-04 23:59:59
+Synthetic order data; date range: 2026-10-29 00:00:00 to 2026-11-05 23:59:59
 Executions timed per measurement: 200
 
 Dropping the three demo indexes to establish a no-index baseline.
 
 === Status filter with a date range ===
 Query: SELECT * FROM orders WHERE status = ? AND order_time BETWEEN ? AND ?
-Params: ["paid","2026-10-28 00:00:00","2026-11-04 23:59:59"]
-Before (idx_orders_status_time dropped): type: ALL | key: NULL | rows: 1770 | avg: 4.3517 ms
-After  (idx_orders_status_time created): type: range | key: idx_orders_status_time | rows: 213 | avg: 1.7821 ms
+Params: ["paid","2026-10-29 00:00:00","2026-11-05 23:59:59"]
+Before (idx_orders_status_time dropped): type: ALL | key: NULL | rows: 1753 | avg: 3.1599 ms
+After  (idx_orders_status_time created): type: range | key: idx_orders_status_time | rows: 209 | avg: 2.1604 ms
 
 === Orders in a date range ===
 Query: SELECT * FROM orders WHERE order_time BETWEEN ? AND ?
-Params: ["2026-10-28 00:00:00","2026-11-04 23:59:59"]
-Before (idx_orders_order_time dropped): type: ALL | key: NULL | rows: 1770 | avg: 3.7034 ms
-After  (idx_orders_order_time created): type: range | key: idx_orders_order_time | rows: 213 | avg: 1.5813 ms
+Params: ["2026-10-29 00:00:00","2026-11-05 23:59:59"]
+Before (idx_orders_order_time dropped): type: ALL | key: NULL | rows: 1753 | avg: 4.1025 ms
+After  (idx_orders_order_time created): type: range | key: idx_orders_order_time | rows: 209 | avg: 1.2487 ms
 
 === Menu search with name LIKE ===
 Query: SELECT * FROM menu_items WHERE name LIKE 'Gar%'
 Params: []
-Before (idx_menu_items_name dropped): type: ALL | key: NULL | rows: 40 | avg: 0.4031 ms
-After  (idx_menu_items_name created): type: range | key: idx_menu_items_name | rows: 1 | avg: 0.4322 ms
+Before (idx_menu_items_name dropped): type: ALL | key: NULL | rows: 40 | avg: 0.2230 ms
+After  (idx_menu_items_name created): type: range | key: idx_menu_items_name | rows: 1 | avg: 0.2765 ms
 
 All indexes are present at the end of the demo.

@@ -23,7 +23,7 @@ function groupByCategory(items) {
   return groups
 }
 
-export default function MenuPage() {
+export default function MenuPage({ canManage = false }) {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [search, setSearch] = useState('')
@@ -154,15 +154,19 @@ export default function MenuPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Menu</h1>
-          <p className="mt-1 text-slate-600">Browse and manage menu items.</p>
+          <p className="mt-1 text-slate-600">
+            {canManage ? 'Browse and manage menu items.' : 'Browse menu items.'}
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={showForm ? handleCancel : () => setShowForm(true)}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600"
-        >
-          {showForm ? 'Cancel' : 'Add item'}
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            onClick={showForm ? handleCancel : () => setShowForm(true)}
+            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600"
+          >
+            {showForm ? 'Cancel' : 'Add item'}
+          </button>
+        )}
       </div>
 
       <input
@@ -175,7 +179,7 @@ export default function MenuPage() {
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-      {showForm && (
+      {canManage && showForm && (
         <form onSubmit={handleSubmit} className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-slate-800">
             {editingId === null ? 'Add item' : `Edit item #${editingId}`}
@@ -251,24 +255,26 @@ export default function MenuPage() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-slate-600">₹{Number(item.price).toFixed(2)}</p>
-                  <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                      disabled={deletingId === item.item_id}
-                      className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item)}
-                      disabled={deletingId === item.item_id}
-                      className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 transition hover:text-red-800 disabled:opacity-60"
-                    >
-                      {deletingId === item.item_id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </div>
+                  {canManage && (
+                    <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(item)}
+                        disabled={deletingId === item.item_id}
+                        className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item)}
+                        disabled={deletingId === item.item_id}
+                        className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 transition hover:text-red-800 disabled:opacity-60"
+                      >
+                        {deletingId === item.item_id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
