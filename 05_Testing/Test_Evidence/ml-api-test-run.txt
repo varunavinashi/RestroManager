@@ -1,0 +1,74 @@
+==============================================================================
+HackA47 RestroManager - ML API Test Suite
+==============================================================================
+Base URL:      http://localhost:5000
+Runner:        node:test-free (node:assert + global fetch), no test framework installed
+Evidence file: M:\Academics\Local_Web-dev\RestroManager\05_Testing\Test_Evidence\ml-api-test-run.txt
+Pre-flight:    GET /api/health -> 200 {"status":"ok"}
+Fixtures:      item_recommendations has 400 rows
+               cart item_ids=1,2
+               top recommendation for item 1 is item 14
+
+------------------------------------------------------------------------------
+ID:      TC1
+Title:   Valid cart recommendations
+Input:   GET /api/ml/recommendations?item_ids=1,2&limit=3
+Expected: HTTP 200, { data: [...] } with at most 3 available items, summed scores, no cart items, score descending
+Actual:  200, 3 row(s): Jeera Rice (#27, score 0.25783, Breads & Rice, Rs.130.00); Chicken Biryani (#12, score 0.14248, Main Courses, Rs.320.00); Dal Makhani (#14, score 0.13775, Main Courses, Rs.240.00)
+Result:  PASS
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+ID:      TC2
+Title:   Cart items excluded from recommendations
+Input:   GET /api/ml/recommendations?item_ids=1&limit=50, then item_ids=1,<top recommendation>
+Expected: The top recommendation for item 1 appears alone, then disappears once it is added to the cart, along with the cart item itself
+Actual:  200, 14 present with cart=[1], absent with cart=[1,14]; both cart ids excluded
+Result:  PASS
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+ID:      TC3
+Title:   Missing item_ids parameter
+Input:   GET /api/ml/recommendations?limit=3
+Expected: HTTP 400 with a flat { error } body and no { data } envelope
+Actual:  400 "Query parameter "item_ids" must contain 1 to 20 comma-separated positive integers."
+Result:  PASS
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+ID:      TC4
+Title:   More than 20 item ids (21)
+Input:   GET /api/ml/recommendations?item_ids=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+Expected: HTTP 400 with a flat { error } body and no { data } envelope
+Actual:  400 "Query parameter "item_ids" must contain 1 to 20 comma-separated positive integers."
+Result:  PASS
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+ID:      TC5
+Title:   Latest model run metrics
+Input:   GET /api/ml/metrics
+Expected: HTTP 200 with model_name, hit_at_3, mrr_at_3, n_*_orders, trained_at and a "models" array, matching the latest ml_model_runs row
+Actual:  200, cosine, Hit@3=0.29963, MRR@3=0.24844, splits=1215/274/267, models=[popularity, cooccurrence, cosine]
+Result:  PASS
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+ID:      TC6
+Title:   Highest-scored recommendation pairs
+Input:   GET /api/ml/top-pairs?limit=5
+Expected: HTTP 200 with at most 5 rows, both item names present, score descending
+Actual:  200, 5 row(s), top: Chicken Biryani -> Boondi Raita (0.61913)
+Result:  PASS
+------------------------------------------------------------------------------
+
+==============================================================================
+SUMMARY: 6/6 passed
+  PASS  TC1
+  PASS  TC2
+  PASS  TC3
+  PASS  TC4
+  PASS  TC5
+  PASS  TC6
+==============================================================================
