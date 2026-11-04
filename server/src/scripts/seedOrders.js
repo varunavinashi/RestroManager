@@ -9,6 +9,33 @@ const SEED = 47;
 const CUSTOMER_COUNT = 40;
 const CUSTOMER_PHONE_PREFIX = '90000';
 
+// Signature pairs are defined by menu item name; 
+const SIGNATURE_PAIRS = [
+  { first: 'Butter Chicken', partner: 'Butter Naan' },
+  { first: 'Chicken Biryani', partner: 'Boondi Raita' },
+  { first: 'Dal Makhani', partner: 'Jeera Rice' },
+];
+const SIGNATURE_PARTNER_CHANCE = 0.55;
+
+// Anchor mains come from the Main Courses category, and these favourites are wice as likely to anchor an order.
+const ANCHOR_WEIGHT_BOOST_NAMES = new Set([
+  'Butter Chicken',
+  'Chicken Biryani',
+  'Dal Makhani',
+]);
+const ANCHOR_WEIGHT_BOOST = 2;
+
+// Breads & Rice add-ons that follow an anchor main.
+const BREAD_CHANCE = 0.65;
+const SECOND_BREAD_CHANCE = 0.15;
+const RICE_CHANCE = 0.25;
+const BREAD_WEIGHTS = new Map([
+  ['Butter Naan', 3],
+  ['Garlic Naan', 3],
+  ['Tandoori Roti', 2],
+]);
+const BREAD_KEYWORDS = ['naan', 'roti', 'paratha', 'kulcha', 'chapati'];
+
 const mulberry32 = (seed) => {
   let state = seed >>> 0;
   return () => {
@@ -23,6 +50,30 @@ const mulberry32 = (seed) => {
 const rand = mulberry32(SEED);
 const randInt = (min, max) => Math.floor(rand() * (max - min + 1)) + min;
 const pick = (items) => items[randInt(0, items.length - 1)];
+
+const weightedPick = (items, weightOf) => {
+  if (!items.length) return undefined;
+
+  const totalWeight = items.reduce((sum, item) => sum + weightOf(item), 0);
+  if (totalWeight <= 0) return pick(items);
+
+  let threshold = rand() * totalWeight;
+  for (const item of items) {
+    threshold -= weightOf(item);
+    if (threshold < 0) return item;
+  }
+
+  return items[items.length - 1];
+};
+
+const isBreadsAndRice = (item) =>
+  item.category.toLowerCase() === 'breads & rice';
+const isBread = (item) =>
+  isBreadsAndRice(item) &&
+  BREAD_KEYWORDS.some((keyword) => item.name.toLowerCase().includes(keyword));
+const isRice = (item) =>
+  isBreadsAndRice(item) && item.name.toLowerCase().includes('rice');
+
 const pad2 = (value) => String(value).padStart(2, '0');
 const roundMoney = (value) => Math.round(value * 100) / 100;
 
@@ -111,64 +162,33 @@ const loadData = async () => {
   };
 };
 
-const buildSignaturePairs = (menuItems, itemsByCategory) => {
+const resolveSignaturePairs = (menuItems) => {
   const byName = new Map(menuItems.map((item) => [item.name, item]));
   const pairs = [];
-  const seen = new Set();
 
-  const pairKey = (first, second) =>
-    [first.item_id, second.item_id].sort((a, b) => a - b).join(':');
+  for (const { first, partner } of SIGNATURE_PAIRS) {
+    const firstItem = byName.get(first);
+    const partnerItem = byName.get(partner);
 
-  const addPair = (first, second) => {
-    if (!first || !second || first.item_id === second.item_id) return;
-
-    const key = pairKey(first, second);
-    if (seen.has(key)) return;
-
-    seen.add(key);
-    pairs.push({ first, second });
-  };
-
-  const namedPairs = [
-    ['Butter Chicken', 'Masala Chai'],
-    ['Hyderabadi Chicken Biryani', 'Mango Lassi'],
-    ['Paneer Tikka Shashlik', 'Gulab Jamun (2 pcs)'],
-  ];
-
-  for (const [firstName, secondName] of namedPairs) {
-    addPair(byName.get(firstName), byName.get(secondName));
-  }
-
-  const mains = itemsByCategory('Main Courses');
-  const beverages = itemsByCategory('Beverages');
-  const appetizers = itemsByCategory('Appetizers');
-  const desserts = itemsByCategory('Desserts');
-
-  const fallbackPairs = [
-    [mains[0], beverages[0]],
-    [mains[1] || mains[0], desserts[0] || beverages[1]],
-    [appetizers[0], beverages[1] || beverages[0]],
-    [mains[0], desserts[0]],
-    [appetizers[0], desserts[0]],
-  ];
-
-  for (const [first, second] of fallbackPairs) {
-    addPair(first, second);
-  }
-
-  if (pairs.length < 3) {
-    for (let i = 0; i < menuItems.length && pairs.length < 3; i += 1) {
-      for (let j = i + 1; j < menuItems.length && pairs.length < 3; j += 1) {
-        addPair(menuItems[i], menuItems[j]);
-      }
+    if (!firstItem || !partnerItem) {
+      const missing = !firstItem ? first : partner;
+      console.warn(
+        `Skipping signature pair "${first}" -> "${partner}": "${missing}" is not on the available menu.`
+      );
+      continue;
     }
+
+    if (firstItem.item_id === partnerItem.item_id) {
+      console.warn(
+        `Skipping signature pair "${first}" -> "${partner}": both names resolve to the same item.`
+      );
+      continue;
+    }
+
+    pairs.push({ first: firstItem, partner: partnerItem });
   }
 
-  if (pairs.length < 3) {
-    throw new Error('Need at least three distinct item pairs for signature pairs.');
-  }
-
-  return pairs.slice(0, 3);
+  return pairs;
 };
 
 const buildCustomers = () => {
@@ -245,15 +265,58 @@ const buildOrder = (date, timeMinutes, context) => {
     if (items.length) addItem(pick(items));
   };
 
-  // will be used in future to train the model to recognize signature pairs
-  if (rand() < 0.5) {
-    const pair = pick(signaturePairs);
-    addItem(pair.first);
-    addItem(pair.second);
+  // Anchor mains always come from the Main Courses category; the favourites in
+  // ANCHOR_WEIGHT_BOOST_NAMES are twice as likely to be picked.
+  const mains = itemsByCategory('Main Courses');
+  const anchor = weightedPick(mains, (item) =>
+    ANCHOR_WEIGHT_BOOST_NAMES.has(item.name) ? ANCHOR_WEIGHT_BOOST : 1
+  );
+  addItem(anchor);
+
+  // Breads and rice are add-ons that follow the anchor main.
+  const breads = itemsByCategory('Breads & Rice').filter(isBread);
+  const rices = itemsByCategory('Breads & Rice').filter(isRice);
+
+  const addBread = () => {
+    const availableBreads = breads.filter((item) => !chosen.has(item.item_id));
+    addItem(
+      weightedPick(availableBreads, (item) => BREAD_WEIGHTS.get(item.name) || 1)
+    );
+  };
+
+  if (anchor) {
+    if (rand() < BREAD_CHANCE) {
+      addBread();
+      if (rand() < SECOND_BREAD_CHANCE) addBread();
+    }
+    if (rices.length && rand() < RICE_CHANCE) {
+      addItem(pick(rices));
+    }
   }
 
+  // Signature pairs are name based. The partner is only considered once its
+  // first item is already present, so the two are never inserted together.
+  const chosenNames = new Set([...chosen.values()].map((item) => item.name));
+  for (const pair of signaturePairs) {
+    if (!chosenNames.has(pair.first.name)) continue;
+    if (chosen.has(pair.partner.item_id)) continue;
+
+    if (rand() < SIGNATURE_PARTNER_CHANCE) {
+      addItem(pair.partner);
+      chosenNames.add(pair.partner.name);
+    }
+  }
+
+  // Fill the rest of the order with sides; mains come only from the anchor
+  // selection above.
   while (chosen.size < targetCount && chosen.size < 5) {
-    addItem(pick(menuItems));
+    const remaining = menuItems.filter(
+      (item) =>
+        item.category.toLowerCase() !== 'main courses' &&
+        !chosen.has(item.item_id)
+    );
+    if (!remaining.length) break;
+    addItem(pick(remaining));
   }
 
   const hasCategory = (name) =>
@@ -403,6 +466,29 @@ const printSummary = (orders) => {
   });
 };
 
+const printSignaturePairStats = (orders, signaturePairs) => {
+  console.log('');
+  console.log('Signature pair probabilities P(partner | first item):');
+
+  for (const { first, partner } of signaturePairs) {
+    let firstCount = 0;
+    let partnerCount = 0;
+
+    for (const order of orders) {
+      const itemIds = new Set(order.items.map((item) => item.item_id));
+      if (!itemIds.has(first.item_id)) continue;
+
+      firstCount += 1;
+      if (itemIds.has(partner.item_id)) partnerCount += 1;
+    }
+
+    const probability = firstCount ? partnerCount / firstCount : 0;
+    console.log(
+      `  ${first.name} -> ${partner.name}: ${probability.toFixed(3)} (${partnerCount}/${firstCount})`
+    );
+  }
+};
+
 const seedOrders = async () => {
   const force = process.argv.includes('--force');
 
@@ -424,15 +510,12 @@ const seedOrders = async () => {
     }
 
     const contextData = await loadData();
-    const signaturePairs = buildSignaturePairs(
-      contextData.menuItems,
-      contextData.itemsByCategory
-    );
+    const signaturePairs = resolveSignaturePairs(contextData.menuItems);
 
     console.log('Signature pairs:');
     signaturePairs.forEach((pair, index) => {
       console.log(
-        `  ${index + 1}. ${pair.first.name} + ${pair.second.name}`
+        `  ${index + 1}. ${pair.first.name} -> ${pair.partner.name}`
       );
     });
 
@@ -484,6 +567,7 @@ const seedOrders = async () => {
     }
 
     printSummary(orders);
+    printSignaturePairStats(orders, signaturePairs);
   } finally {
     await pool.end();
   }
