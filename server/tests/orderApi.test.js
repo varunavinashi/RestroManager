@@ -7,6 +7,7 @@ const BASE_URL = process.env.API_URL || 'http://localhost:5000';
 const EVIDENCE_PATH = process.env.EVIDENCE_PATH || path.join(__dirname, '..', '..', '05_Testing', 'Test_Evidence', 'order-api-test-run.txt');
 
 const TEST_CUSTOMER = 'test-harness';
+const DEMO_USERNAME = process.env.DEMO_USERNAME || 'manager1';
 const MISSING_TABLE_ID = 999999;
 const MISSING_ORDER_ID = 999999;
 const INVALID_STATUS = 'refunded';
@@ -24,10 +25,15 @@ function log(line = '') {
   console.log(line);
 }
 
+let authToken = null;
+
 async function request(pathname, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
   const res = await fetch(`${BASE_URL}${pathname}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   });
   const text = await res.text();
   let body = null;
@@ -39,6 +45,21 @@ async function request(pathname, options = {}) {
     }
   }
   return { status: res.status, body };
+}
+
+async function login() {
+  const password = process.env.DEMO_ROLE_PASSWORD;
+  assert.ok(password, 'DEMO_ROLE_PASSWORD must be set to log in for the order API tests');
+
+  const res = await request('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username: DEMO_USERNAME, password }),
+  });
+
+  assert.equal(res.status, 200, `login failed for "${DEMO_USERNAME}": expected 200, got ${res.status} ${JSON.stringify(res.body)}`);
+  assert.ok(res.body.data && res.body.data.token, 'login response did not include a token');
+
+  return res.body.data.token;
 }
 
 const toCents = (value) => Math.round(Number(value) * 100);
@@ -319,6 +340,9 @@ async function run() {
     return;
   }
   log(`Pre-flight:    GET /api/health -> ${health.status} ${JSON.stringify(health.body)}`);
+
+  authToken = await login();
+  log(`Pre-flight:    POST /api/auth/login -> 200 (username "${DEMO_USERNAME}")`);
 
   await setup();
   log(`Fixtures:      table_id=${freeTable.table_id} (table_number ${freeTable.table_number}, status "free")`);

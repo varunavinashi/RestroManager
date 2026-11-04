@@ -1,9 +1,18 @@
 import axios from 'axios'
 import { addSqlRequest } from '../lib/sqlLog'
 
+export const TOKEN_KEY = 'token'
+export const USER_KEY = 'user'
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: { 'Content-Type': 'application/json' },
+})
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
 })
 
 const recordSql = (response) => {

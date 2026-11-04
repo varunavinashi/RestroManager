@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
+const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const tableRoutes = require('./routes/tableRoutes');
@@ -26,6 +27,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tables', tableRoutes);

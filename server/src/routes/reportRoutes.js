@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate, requireRole('manager'));
 
 // order count and total revenue for today
 const TODAY_SQL =

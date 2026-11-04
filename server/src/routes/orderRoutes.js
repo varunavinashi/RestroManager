@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 const ORDER_STATUSES = ['pending', 'preparing', 'served', 'paid'];
 
@@ -231,7 +234,7 @@ router.get('/:id', async (req, res, next) => {
 // POST /api/orders
 // Receive the order request -> validate the input -> get a DB connection
 // -> start transaction -> create order -> commit -> send response.
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('waiter', 'manager'), async (req, res, next) => {
   const body = req.body || {};
 
   const tableId = parseId(body.table_id);
@@ -283,7 +286,7 @@ router.post('/', async (req, res, next) => {
 
 // PUT /api/orders/:id/status
 // Take an order ID and a new status -> validate both -> update the order -> fetch the updated order -> return it
-router.put('/:id/status', async (req, res, next) => {
+router.put('/:id/status', requireRole('waiter', 'chef', 'manager'), async (req, res, next) => {
   const orderId = parseId(req.params.id);
   if (orderId === null) return badRequest(res, 'Order id must be a positive integer.');
 
@@ -309,7 +312,7 @@ router.put('/:id/status', async (req, res, next) => {
 // PUT /api/orders/:id/pay
 // Close a served order through the stored procedure , SQLSTATE 45000 is a conflict
 
-router.put('/:id/pay', async (req, res, next) => {
+router.put('/:id/pay', requireRole('waiter', 'chef', 'manager'), async (req, res, next) => {
   const orderId = parseId(req.params.id);
   if (orderId === null) return badRequest(res, 'Order id must be a positive integer.');
 

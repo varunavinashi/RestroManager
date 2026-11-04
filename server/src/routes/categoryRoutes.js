@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 function badRequest(res, message) {
   return res.status(400).json({ error: message });
@@ -33,7 +36,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // POST /api/categories
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('manager'), async (req, res, next) => {
   const name = parseName((req.body || {}).name);
   if (name === null) return badRequest(res, 'Field "name" is required and must be a non-empty string of at most 100 characters.');
 

@@ -4,6 +4,7 @@ const path = require('path');
 const { performance } = require('perf_hooks');
 const mainPool = require('../config/db');
 const readonlyPool = require('../config/dbReadonly');
+const { authenticate } = require('../middleware/auth');
 
 const pool = readonlyPool || mainPool;
 
@@ -12,6 +13,8 @@ if (!readonlyPool) {
 }
 
 const router = express.Router();
+
+router.use(authenticate);
 
 const QUERIES_FILE = path.resolve(__dirname, '../../sql/queries.sql');
 const MAX_ROWS = 100;

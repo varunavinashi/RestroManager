@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 const TABLE_STATUSES = ['free', 'occupied'];
 
@@ -40,7 +43,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // PUT /api/tables/:id/status
-router.put('/:id/status', async (req, res, next) => {
+router.put('/:id/status', requireRole('waiter', 'manager'), async (req, res, next) => {
   const tableId = parseId(req.params.id);
   if (tableId === null) return badRequest(res, 'Table id must be a positive integer.');
 

@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;

@@ -1,7 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 const ITEM_COLUMNS = 'm.item_id, m.name, m.category_id, c.name AS category_name, m.price, m.is_available, m.created_at';
 
@@ -110,7 +113,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/menu
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('manager'), async (req, res, next) => {
   const body = req.body || {};
 
   const name = parseName(body.name);
@@ -144,7 +147,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // PUT /api/menu/:id
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requireRole('manager'), async (req, res, next) => {
   const itemId = parseId(req.params.id);
   if (itemId === null) return badRequest(res, 'Menu item id must be a positive integer.');
 
@@ -207,7 +210,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/menu/:id
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireRole('manager'), async (req, res, next) => {
   const itemId = parseId(req.params.id);
   if (itemId === null) return badRequest(res, 'Menu item id must be a positive integer.');
 
