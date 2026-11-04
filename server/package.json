@@ -12,7 +12,8 @@
     "db:reset": "npm run db:init && npm run db:seed-orders",
     "demo:roles": "node src/scripts/demoRoles.js",
     "check-schema": "node src/scripts/checkSchema.js",
-    "test:orders": "node tests/orderApi.test.js"
+    "test:orders": "node tests/orderApi.test.js",
+    "ml:train": "python ../ml/train_recommender.py"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -3,3 +3,6 @@ node_modules
 dist
 .DS_Store
 *.log
+ml/.venv
+ml/artifacts/*.png
+__pycache__
