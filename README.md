@@ -223,6 +223,11 @@ request fails with an unknown base URL.
 ---
 
 ## 5. How to run
+```bash
+# Using concurrently script
+npm run hacka47
+```
+**OR ALTERNATIVELY**
 
 Two processes, two terminals. Start the **server first**.
 

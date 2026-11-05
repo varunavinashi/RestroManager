@@ -18,7 +18,10 @@ router.use(authenticate);
 
 const QUERIES_FILE = path.resolve(__dirname, '../../sql/queries.sql');
 const MAX_ROWS = 100;
+const MAX_SQL_LENGTH = 10000;
 const HEADER_PATTERN = /^--\s*Q(\d+):\s*(.+?)\s*\|\s*(.+?)\s*$/;
+const READ_ONLY_START = /^(SELECT|WITH|SHOW|DESCRIBE|DESC|EXPLAIN)\b/i;
+const FORBIDDEN_SQL = /\b(?:INTO\s+(?:OUTFILE|DUMPFILE)|FOR\s+UPDATE|LOCK\s+IN\s+SHARE\s+MODE)\b/i;
 
 function finalizeQuery(entry) {
   const sql = entry.lines.join('\n').trim().replace(/;\s*$/, '').trim();
@@ -90,6 +93,106 @@ function parseId(value) {
   const id = Number(raw);
   return Number.isSafeInteger(id) ? id : null;
 }
+
+// Skip leading whitespace and SQL comments before checking the statement type.
+function stripLeadingComments(sql) {
+  let text = sql.trim();
+  let previous;
+
+  do {
+    previous = text;
+    text = text.replace(
+      /^(?:--[^\n]*(?:\n|$)|#[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)\s*/,
+      ''
+    );
+  } while (text !== previous);
+
+  return text;
+}
+
+// POST /api/query-lab/run
+router.post('/run', async (req, res) => {
+  const body = req.body || {};
+  const rawSql = typeof body.sql === 'string' ? body.sql.trim() : '';
+
+  if (!rawSql) {
+    return res.status(400).json({ error: 'Enter a SQL query to run.' });
+  }
+
+  if (rawSql.length > MAX_SQL_LENGTH) {
+    return res.status(400).json({
+      error: `Query is too long (maximum ${MAX_SQL_LENGTH} characters).`,
+    });
+  }
+
+  const sql = rawSql.replace(/;\s*$/, '').trim();
+  const statement = stripLeadingComments(sql);
+
+  if (!statement) {
+    return res.status(400).json({ error: 'Enter a SQL query to run.' });
+  }
+
+  if (!READ_ONLY_START.test(statement)) {
+    return res.status(400).json({
+      error: 'Only read-only SELECT, WITH, SHOW, DESCRIBE, or EXPLAIN statements are allowed.',
+    });
+  }
+
+  if (FORBIDDEN_SQL.test(sql)) {
+    return res.status(400).json({
+      error: 'Locking and file-output clauses are not allowed here.',
+    });
+  }
+
+  if (!readonlyPool) {
+    return res.status(503).json({
+      error: 'Custom queries are unavailable because the read-only database pool is not configured.',
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await readonlyPool.getConnection();
+    await connection.query('START TRANSACTION READ ONLY');
+
+    const startedAt = performance.now();
+    const [result, fields] = await connection.query(sql);
+    const ms = Math.round(performance.now() - startedAt);
+
+    await connection.query('ROLLBACK');
+
+    const rows = Array.isArray(result) ? result : [];
+    const cappedRows = rows.slice(0, MAX_ROWS);
+    const columns = Array.isArray(fields) ? fields.map((field) => field.name) : [];
+
+    return res.json({
+      data: {
+        sql,
+        columns,
+        rows: cappedRows,
+        rowCount: cappedRows.length,
+        ms,
+      },
+    });
+  } catch (err) {
+    if (!connection) {
+      return res.status(503).json({
+        error: 'Could not connect to the read-only database pool.',
+      });
+    }
+
+    try {
+      await connection.query('ROLLBACK');
+    } catch (rollbackErr) {
+      // Ignore rollback failures so the original query error is returned.
+    }
+
+    return res.status(400).json({ error: err.sqlMessage || err.message || 'Query failed.' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
 
 // GET /api/query-lab
 router.get('/', (req, res) => {
